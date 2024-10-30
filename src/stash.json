@@ -1,0 +1,629 @@
+{
+  "currency_name": "BTC",
+  "acquisitions": [
+    {
+      "timestamp": "10/22/2015 14:33:00",
+      "asset_amount": 75.51075,
+      "asset_price": 274.18,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "12/01/2015 14:19:00",
+      "asset_amount": 27.76054701,
+      "asset_price": 363.89,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "12/28/2015 10:35:00",
+      "asset_amount": 23.48877188,
+      "asset_price": 425.08,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "02/09/2016 11:39:00",
+      "asset_amount": 13.33640657,
+      "asset_price": 372.37,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "02/17/2016 14:26:00",
+      "asset_amount": 11.8768791,
+      "asset_price": 418.75,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "03/02/2016 10:34:00",
+      "asset_amount": 47.07740677,
+      "asset_price": 429.99,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "03/31/2016 13:22:00",
+      "asset_amount": 24.26874747,
+      "asset_price": 416.75,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "04/25/2016 14:21:00",
+      "asset_amount": 21.74530367,
+      "asset_price": 464.9,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "05/27/2016 10:31:00",
+      "asset_amount": 21.16637277,
+      "asset_price": 475.41,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "06/27/2016 15:31:00",
+      "asset_amount": 8.83758847,
+      "asset_price": 643.93,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "07/18/2016 16:06:00",
+      "asset_amount": 6.94813929,
+      "asset_price": 670.21,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "07/26/2016 11:41:00",
+      "asset_amount": 7.12687025,
+      "asset_price": 655.0,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "08/08/2016 15:24:00",
+      "asset_amount": 7.85967878,
+      "asset_price": 595.17,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "08/22/2016 14:47:00",
+      "asset_amount": 7.93710413,
+      "asset_price": 585.91,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "09/01/2016 11:41:00",
+      "asset_amount": 7.84279384,
+      "asset_price": 571.54,
+      "fees": 0.0,
+      "comment": "includes deduction for Chinese visa"
+    },
+    {
+      "timestamp": "09/16/2016 14:14:00",
+      "asset_amount": 7.6687066,
+      "asset_price": 606.21,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "10/04/2016 16:39:00",
+      "asset_amount": 0.1,
+      "asset_price": 609.8,
+      "fees": 60.98,
+      "comment": "Mike repay"
+    },
+    {
+      "timestamp": "10/20/2016 15:46:00",
+      "asset_amount": 14.81570015,
+      "asset_price": 627.9,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "11/03/2016 12:13:00",
+      "asset_amount": 9.28103302,
+      "asset_price": 715.24,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "11/16/2016 12:06:00",
+      "asset_amount": 6.3679872,
+      "asset_price": 727.25,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "12/05/2016 14:08:00",
+      "asset_amount": 6.17923776,
+      "asset_price": 753.2,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "12/27/2016 14:14:00",
+      "asset_amount": 4.96481918,
+      "asset_price": 935.99,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "01/06/2017 12:56:00",
+      "asset_amount": 10.21633625,
+      "asset_price": 908.1,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "01/25/2017 17:16:00",
+      "asset_amount": 5.19383309,
+      "asset_price": 897.99,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "02/02/2017 11:18:00",
+      "asset_amount": 4.67217398,
+      "asset_price": 998.38,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "02/20/2017 11:29:00",
+      "asset_amount": 4.3691602,
+      "asset_price": 1065.64,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "03/02/2017 15:36:00",
+      "asset_amount": 3.66851579,
+      "asset_price": 1277.28,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "03/16/2017 00:00:00",
+      "asset_amount": 3.80360065,
+      "asset_price": 1222.95,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "03/30/2017 14:04:00",
+      "asset_amount": 4.49312208,
+      "asset_price": 1038.38,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "04/12/2017 11:24:00",
+      "asset_amount": 3.76797832,
+      "asset_price": 1217.52,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "04/26/2017 15:22:00",
+      "asset_amount": 3.57524711,
+      "asset_price": 1306.34,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "05/18/2017 13:15:00",
+      "asset_amount": 2.46284069,
+      "asset_price": 1868.3,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "06/09/2017 13:40:00",
+      "asset_amount": 3.22968589,
+      "asset_price": 2858.0,
+      "fees": 0.0,
+      "comment": ""
+    },
+    {
+      "timestamp": "06/23/2017 14:25:00",
+      "asset_amount": 1.69227941,
+      "asset_price": 2706.63,
+      "fees": 0.0,
+      "comment": ""
+    }
+  ],
+  "dispositions": [
+    {
+      "timestamp": "10/22/2015 14:56:00",
+      "asset_amount": 34.92438215,
+      "asset_price": 274.76390433,
+      "fees": 95.96,
+      "comment": "",
+      "reference": "CB Ref: YBFY7P4C"
+    },
+    {
+      "timestamp": "11/04/2015 03:36:00",
+      "asset_amount": 10,
+      "asset_price": 440,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "gdo 382f2bc4-c7a7-4a9a-9c10-6c36f5efe4a2"
+    },
+    {
+      "timestamp": "11/04/2015 12:03:14",
+      "asset_amount": 10,
+      "asset_price": 475,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "gdo cc196d69-ddc9-4060-afac-315cecfdfb53"
+    },
+    {
+      "timestamp": "11/05/2015 22:52:00",
+      "asset_amount": 5,
+      "asset_price": 390,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "gdo e535b5f4-1868-46fe-a5db-67f37cc3a10d"
+    },
+    {
+      "timestamp": "11/06/2015 02:23:18",
+      "asset_amount": 5,
+      "asset_price": 370,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "Gdo 79907f31-c0bb-4e3d-9f35-a94052c79ea2"
+    },
+    {
+      "timestamp": "11/06/2015 17:33:50",
+      "asset_amount": 5,
+      "asset_price": 394,
+      "fees": 0.35,
+      "comment": "",
+      "reference": "Gdo 4d6e80c3-c187-4469-8c89-0585dfd525f1"
+    },
+    {
+      "timestamp": "12/03/2015 03:02:49",
+      "asset_amount": 25,
+      "asset_price": 363.73,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "GD ord f771bce9-2c83-44a7-866a-2e6201e62492"
+    },
+    {
+      "timestamp": "12/03/2015 03:02:49",
+      "asset_amount": 3,
+      "asset_price": 367.5,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "Gdo 244e6454-dfab-4471-a5bb-a16ac416cdca"
+    },
+    {
+      "timestamp": "12/29/2015 00:00:00",
+      "asset_amount": 10,
+      "asset_price": 425.75,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "gdo adc38772-ddde-4f1f-8a53-fe24d1b9fb0e"
+    },
+    {
+      "timestamp": "02/10/2016 00:00:00",
+      "asset_amount": 13.33640657,
+      "asset_price": 374.95,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "gdo 8b82f973-2b54-495e-920f-efcb8eef9af4"
+    },
+    {
+      "timestamp": "02/17/2016 00:00:00",
+      "asset_amount": 11.8768791,
+      "asset_price": 420.99,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "gdo af15460d-e415-4013-8c4d-343dc6e81b05"
+    },
+    {
+      "timestamp": "03/02/2016 00:00:00",
+      "asset_amount": 20,
+      "asset_price": 428.75,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "gdo 545c4af0-0fca-461f-aa06-7de1051868b7"
+    },
+    {
+      "timestamp": "03/23/2016 00:00:00",
+      "asset_amount": 10,
+      "asset_price": 418,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "gdo a3447399-9e4f-49ed-83e6-c8a4d9189f91"
+    },
+    {
+      "timestamp": "03/28/2016 03:31:30",
+      "asset_amount": 10,
+      "asset_price": 422.99,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "gdo b3bd2f0d-55b8-46a6-ac3b-8d94f7eb25c7"
+    },
+    {
+      "timestamp": "04/08/2016 04:52:40",
+      "asset_amount": 10,
+      "asset_price": 422.98,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "gdo 0e3b3c72-3dcc-4455-a6c0-2108bde94730"
+    },
+    {
+      "timestamp": "04/08/2016 16:10:00",
+      "asset_amount": 10,
+      "asset_price": 424.5,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "gdo d4d09257-a4bf-4e57-bce3-bc3b61af9998"
+    },
+    {
+      "timestamp": "04/11/2016 20:25:43",
+      "asset_amount": 10,
+      "asset_price": 423.49,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "gdo 56d43472-6cba-40b1-9bd3-c789f97d0217"
+    },
+    {
+      "timestamp": "04/15/2016 17:59:00",
+      "asset_amount": 5,
+      "asset_price": 430,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "gdo  b8f2f785-4172-4bde-8c5e-04d9e0610d85"
+    },
+    {
+      "timestamp": "06/02/2016 22:52:25",
+      "asset_amount": 10,
+      "asset_price": 540.23,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "gdo ed9f7744-85aa-44b0-92ea-7ee3778462cc"
+    },
+    {
+      "timestamp": "06/03/2016 08:24:31",
+      "asset_amount": 11,
+      "asset_price": 544.19,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "gdo a07a6ef7-1ea6-4ef6-aa28-81f61797fee2"
+    },
+    {
+      "timestamp": "06/27/2016 22:08:08",
+      "asset_amount": 8.83758847,
+      "asset_price": 649.5,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "Gd0 10157bd8-0af9-4bac-8dd3-8a26384ed67b"
+    },
+    {
+      "timestamp": "07/29/2016 03:49:01",
+      "asset_amount": 7.12687025,
+      "asset_price": 657.48,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "gd 2469644b-ce15-455c-ad0d-e8abfccbf948"
+    },
+    {
+      "timestamp": "08/10/2016 14:08:00",
+      "asset_amount": 7.85967878,
+      "asset_price": 593.91,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "gd 66289921-0a3c-44c6-b9cf-582cf53469ca"
+    },
+    {
+      "timestamp": "08/22/2016 20:19:02",
+      "asset_amount": 7.93710413,
+      "asset_price": 585.91,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "Gd 2a06dfda-6af1-4357-aa41-f3bc41e830aa"
+    },
+    {
+      "timestamp": "09/01/2016 18:55:18",
+      "asset_amount": 7.84279384,
+      "asset_price": 571.55,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "a9ebab79-0bfe-4e8d-beba-017d895d6d03"
+    },
+    {
+      "timestamp": "09/30/2016 16:43:28",
+      "asset_amount": 7.6687066,
+      "asset_price": 606.47,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "869d7bee-5dd8-4826-98a9-0f7bd25d3d73"
+    },
+    {
+      "timestamp": "10/11/2016 17:19:31",
+      "asset_amount": 6.5,
+      "asset_price": 634.47,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "abad777d-dcf1-4ed5-bb0c-1a74a960ff2e"
+    },
+    {
+      "timestamp": "10/22/2016 09:30:00",
+      "asset_amount": 5,
+      "asset_price": 633.47,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "83988b0e-dd37-48c7-803e-2e4c28aa7c4e"
+    },
+    {
+      "timestamp": "10/22/2016 12:10:00",
+      "asset_amount": 5,
+      "asset_price": 635,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "6d0df603-763f-4644-a6f3-6264df9ba6ff"
+    },
+    {
+      "timestamp": "10/24/2016 23:30:01",
+      "asset_amount": 5,
+      "asset_price": 649.87,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "7ff1eb08-fded-41be-a2ad-706765e82fad"
+    },
+    {
+      "timestamp": "10/29/2016 01:53:31",
+      "asset_amount": 5,
+      "asset_price": 694.87,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "c4555b9b-bef7-4be4-9215-9c4ddc7682e7"
+    },
+    {
+      "timestamp": "11/16/2016 19:13:31",
+      "asset_amount": 9.28103302,
+      "asset_price": 738.12,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "d13068ba-fd98-4a94-a22c-57b2577e63a6"
+    },
+    {
+      "timestamp": "11/30/2016 23:40:36",
+      "asset_amount": 6.3679872,
+      "asset_price": 742.85,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "e03b4cca-eb9d-4749-8a10-d18944cf5074"
+    },
+    {
+      "timestamp": "12/28/2016 01:32:01",
+      "asset_amount": 4.96481918,
+      "asset_price": 936,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "8c820443-312d-4466-87e5-04364f68e5e9"
+    },
+    {
+      "timestamp": "12/29/2016 00:00:00",
+      "asset_amount": 10,
+      "asset_price": 430,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "gdo 6afd1847-0572-431f-9ad5-cb35bd99caf3"
+    },
+    {
+      "timestamp": "01/10/2017 09:36:35",
+      "asset_amount": 9,
+      "asset_price": 912,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "794a888e-c57e-4806-bdf5-9c98ff1adb25"
+    },
+    {
+      "timestamp": "01/26/2017 15:28:40",
+      "asset_amount": 5.19383309,
+      "asset_price": 918.49,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "0c47a2b1-f2ca-4ac9-b928-5e8acc24029d"
+    },
+    {
+      "timestamp": "02/02/2017 21:22:31",
+      "asset_amount": 4.67217398,
+      "asset_price": 1004.05,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "f2b189e1-698c-423c-b39a-f77a0621e924"
+    },
+    {
+      "timestamp": "02/03/2017 02:09:50",
+      "asset_amount": 5,
+      "asset_price": 1014.95,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "fd0858a7-4bdf-4278-8d9a-b4045740a32f"
+    },
+    {
+      "timestamp": "02/15/2017 22:17:39",
+      "asset_amount": 5,
+      "asset_price": 1015.5,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "2b1acd83-fb60-48de-8b39-4ba79b74e939"
+    },
+    {
+      "timestamp": "02/20/2017 20:15:50",
+      "asset_amount": 4.3691602,
+      "asset_price": 1067.08,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "04561320-b7a3-43b8-8081-c3dcf34f647c"
+    },
+    {
+      "timestamp": "03/03/2017 03:59:59",
+      "asset_amount": 3.66851579,
+      "asset_price": 1279.96,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "d544051a-e72a-4014-aad2-5479e59744ea"
+    },
+    {
+      "timestamp": "03/31/2017 03:00:35",
+      "asset_amount": 4.49312208,
+      "asset_price": 1055.08,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "817fc1e6-5ae7-4f4e-a231-c78b61ff91eb"
+    },
+    {
+      "timestamp": "04/21/2017 16:33:33",
+      "asset_amount": 5,
+      "asset_price": 1246.21,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "78d7ce41-741d-42a8-82a1-52f06a97dbed"
+    },
+    {
+      "timestamp": "04/27/2017 00:00:00",
+      "asset_amount": 1,
+      "asset_price": 1399.79,
+      "fees": 0.0,
+      "comment": "bought eth",
+      "reference": "btc tx a32ad910b5e5648b13811dc327b11843d699c09acccb9e63a90e2be7d0628ea4"
+    },
+    {
+      "timestamp": "04/27/2017 00:00:00",
+      "asset_amount": 1,
+      "asset_price": 1399.79,
+      "fees": 0.0,
+      "comment": "bought eth",
+      "reference": "btc tx 1b46415e4dea9e6df4a0e3a6f60d1e77e4cea2cbf692bd751ddb068179a6b0f0"
+    },
+    {
+      "timestamp": "04/27/2017 00:00:00",
+      "asset_amount": 2,
+      "asset_price": 1399.79,
+      "fees": 0.0,
+      "comment": "bought eth",
+      "reference": "btc tx cee17b83ec19a8c67ce0aae7e290788043180d150513026822efb6e9338b395d"
+    },
+    {
+      "timestamp": "12/30/2021 21:54:14",
+      "asset_amount": 0.002,
+      "asset_price": 46245,
+      "fees": 3.55,
+      "comment": "converted to USDC",
+      "reference": "?"
+    }
+  ]
+}

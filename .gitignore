@@ -1,0 +1,14 @@
+/.coverage
+/.pytest_cache
+/.vscode
+/acqs-schema.json
+/BTC_acqs.csv
+/BTC_acqs.json
+/BTC_disp.csv
+/BTC_disp.json
+/crap-stash.json
+/htmlcov
+/jupyter
+/notes.txt
+/stash.json
+/ui-sketches.excalidraw
