@@ -1,7 +1,7 @@
 
 import sys
 import pytest
-from datetime import datetime
+from datetime import datetime,timezone
 from typing import List, Dict, Any
 
 from models.acquisition import Acquisition
@@ -14,7 +14,7 @@ FEES_A = 1.0
 COMMENT_A = "Mike paid me for lunch"
 
 ACQ_JSON_A = {
-    "timestamp": "12/28/2015 10:35:00",
+    "timestamp": 1451298900.0,  # "12/28/2015 10:35:00+0000",
     "asset_amount": 23.48877188,
     "asset_price": 425.08,
     "fees": 0.0,
@@ -33,7 +33,7 @@ def test_acquisition_init():
 
 def test_acquisition_from_json_dict():
     a = Acquisition.from_json_dict(ACQ_JSON_A)
-    assert a.timestamp == datetime.strptime('12/28/2015 10:35:00+0000', TIMESTAMP_FORMAT)
+    assert a.timestamp == datetime.strptime('12/28/2015 10:35:00 +0000', Acquisition.DATETIME_FORMAT).timestamp()
     assert a.asset_price == 425.08
     assert a.asset_amount == 23.48877188
     assert a.fees == 0.0
