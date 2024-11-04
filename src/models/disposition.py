@@ -1,16 +1,17 @@
 import sys
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict
 from PySide6.QtCore import Qt, QAbstractTableModel
 
 from models.transaction import Transaction
+from PySide6.QtWidgets import  QMessageBox
 
 class Disposition(Transaction):
     """The getting-rid-of some of a commodity. Could be a sale, a gift, or a payment
 
     ctor params:
-    timestamp: datetime -- When the thing happened
+    timestamp: float -- When the thing happened (posix timestamp)
     asset_amount: float -- The amount disposed (negative number)
     asset_price: float --  The unit price of the commodity when disposed
     fees: float -- might be zero
@@ -23,9 +24,14 @@ class Disposition(Transaction):
 
     def __init__(self, timestamp: datetime, asset_amount: float, asset_price: float,
                  fees: float, reference: str, comment: str):
-
         super().__init__( timestamp, asset_amount, asset_price, fees, comment)
         self.reference = reference
+
+    @classmethod
+    def duplicate(cls, other: "Disposition") -> "Disposition":
+        return cls(other.timestamp, other.asset_amount, other.asset_price,
+                   other.fees, other.reference, other.comment)
+
 
     @classmethod
     def from_json_dict(cls, jd: Dict) -> "Disposition":
@@ -33,7 +39,7 @@ class Disposition(Transaction):
 
         Like this:
             {
-                "timestamp": "02/03/2017 02:09:50",
+                "timestamp": 1493251200.0,
                 "asset_amount": 5,
                 "asset_price": 1014.95,
                 "fees": 0,
@@ -42,7 +48,7 @@ class Disposition(Transaction):
             }
         """
         return cls(
-            datetime.strptime(jd["timestamp"], Transaction.DATETIME_FORMAT),
+            jd["timestamp"],
             jd["asset_amount"],
             jd["asset_price"],
             jd["fees"],
@@ -53,7 +59,7 @@ class Disposition(Transaction):
 
     def to_json_dict(self) -> Dict:
         return {
-            "timestamp": self.timestamp.strftime(Transaction.DATETIME_FORMAT),
+            "timestamp": self.timestamp,
             "asset_amount": self.asset_amount,
             "asset_price": self.asset_price,
             "fees": self.fees,
@@ -74,18 +80,66 @@ class DisTableModel(QAbstractTableModel):
     DIS_FEES_IDX = 3
     DIS_REFERENCE_IDX = 4
     DIS_COMMENT_IDX = 5
-    DIS_COLUMN_COUNT = 6
+    DIS_CANCEL_BTN_IDX = 6
+    DIS_ACCEPT_BTN_IDX = 7
+    DIS_COLUMN_COUNT = 8
 
-    HEADER_LABELS = ["Date", "Amount", "Price", "Fees", "reference", "Comment"]
+    HEADER_LABELS = ["Date", "Amount", "Price", "Fees", "Reference", "Comment", "", ""]
 
-    def __init__(self, data: List[Disposition] = []):
+    def __init__(self, dispositions: List[Disposition]):
         super(DisTableModel, self).__init__()
-        self.dispositionsList = data
+        self.dispositionsList = dispositions
+        self.edit_buff = None
+        self.row_under_edit: int = -1 # only a single row can be edited at a time
 
-    def fetch_data_str(self, row: int, col: int) -> str:
-        dis = self.dispositionsList[row]
+    def reset_model(self, dispositions: List[Disposition] = []) -> None:
+        self.beginResetModel()
+        self.dispositionsList = dispositions if dispositions else []
+        self.endResetModel()
+
+    def edit_row(self, row: int = -1) -> None:
+        if self.row_under_edit == -1:
+            self.row_under_edit = row
+            self.edit_buff = Disposition.duplicate(self.dispositionsList[row])
+        else:
+            prev_edit_row = self.row_under_edit
+            self.cancel_edit()
+            if row != prev_edit_row:
+                self.row_under_edit = row
+
+    def cancel_edit(self) -> None:
+        self.row_under_edit = -1
+        self.edit_buff = None
+
+    def accept_edit(self) -> None:
+        self.dispositionsList[self.row_under_edit] = Disposition.duplicate(self.edit_buff)
+        self.row_under_edit = -1
+        self.edit_buff = None
+
+    def set_dis_data(self, dis: Disposition, col: int, str_val: str) -> bool:
+        try:
+            if col == DisTableModel.DIS_TIMESTAMP_IDX:
+                # Note that strptime() ignores TZ abbreviations, so we have to use the ugly "+0000"
+                dt = datetime.strptime(str_val, Transaction.DATETIME_FORMAT)
+                dis.timestamp = dt.timestamp()
+            if col == DisTableModel.DIS_AMOUNT_IDX:
+                dis.asset_amount = float(str_val)
+            if col == DisTableModel.DIS_PRICE_IDX:
+                dis.asset_price = float(str_val)
+            if col == DisTableModel.DIS_FEES_IDX:
+                dis.fees = float(str_val)
+            if col == DisTableModel.DIS_REFERENCE_IDX:
+                dis.reference = str_val
+            if col == DisTableModel.DIS_COMMENT_IDX:
+                dis.comment = str_val
+            return True
+        except Exception as ex:
+            button = QMessageBox.warning(None,"Edit", str(ex) )
+            return False
+
+    def fetch_data(self, dis: Disposition, col: int) -> object:
         if col == DisTableModel.DIS_TIMESTAMP_IDX:
-            return dis.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+           return datetime.fromtimestamp(dis.timestamp,tz=timezone.utc).strftime(Transaction.DATETIME_FORMAT)
         if col == DisTableModel.DIS_AMOUNT_IDX:
             return f"{dis.asset_amount:.8f}"
         if col == DisTableModel.DIS_PRICE_IDX:
@@ -101,12 +155,29 @@ class DisTableModel(QAbstractTableModel):
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = ...):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return DisTableModel.HEADER_LABELS[section]
-        #if orientation == Qt.Vertical and role == Qt.DisplayRole:
-        #    return f"{section + 1}"
+
+    def flags(self, index):
+        if index.row() == self.row_under_edit:
+            if index.column() < self.DIS_CANCEL_BTN_IDX:
+                return Qt.ItemIsSelectable|Qt.ItemIsEnabled|Qt.ItemIsEditable
+            else:
+                return Qt.ItemIsEnabled
+        else:
+            return Qt.ItemIsSelectable|Qt.ItemIsEnabled
 
     def data(self, index, role):
         if role == Qt.DisplayRole:
-            return self.fetch_data_str(index.row(), index.column())
+            dis = self.edit_buff if self.row_under_edit == index.row() else self.dispositionsList[index.row()]
+            return self.fetch_data(dis, index.column())
+
+        if role == Qt.EditRole and index.row() == self.row_under_edit:
+            return self.fetch_data(self.edit_buff, index.column())
+
+    def setData(self, index, value, role):
+        """This moves edited widget (string) data into the edit_buffer"""
+        if role == Qt.EditRole and index.row() == self.row_under_edit:
+            return self.set_dis_data(self.edit_buff, index.column(), str(value))
+
 
     def rowCount(self, index):
         return len(self.dispositionsList)

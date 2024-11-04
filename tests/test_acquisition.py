@@ -6,8 +6,8 @@ from typing import List, Dict, Any
 
 from models.acquisition import Acquisition
 
-TIMESTAMP_FORMAT = '%m/%d/%Y %H:%M:%S'
-TIMESTAMP_A = datetime.strptime('03/12/2022 12:34:56', TIMESTAMP_FORMAT)
+TIMESTAMP_FORMAT = '%m/%d/%Y %H:%M:%S%z'
+TIMESTAMP_A = datetime.strptime('03/12/2022 12:34:56+0000', TIMESTAMP_FORMAT)
 ASSET_AMOUNT_A = 43.24
 ASSET_PRICE_A = 100.0
 FEES_A = 1.0
@@ -33,7 +33,7 @@ def test_acquisition_init():
 
 def test_acquisition_from_json_dict():
     a = Acquisition.from_json_dict(ACQ_JSON_A)
-    assert a.timestamp == datetime.strptime('12/28/2015 10:35:00', TIMESTAMP_FORMAT)
+    assert a.timestamp == datetime.strptime('12/28/2015 10:35:00+0000', TIMESTAMP_FORMAT)
     assert a.asset_price == 425.08
     assert a.asset_amount == 23.48877188
     assert a.fees == 0.0

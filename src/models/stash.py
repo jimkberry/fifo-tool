@@ -1,6 +1,6 @@
 import sys
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any
 
 from PySide6.QtCore import Qt, QAbstractTableModel
@@ -15,11 +15,11 @@ class LotState:
     def __init__(self, lot_num: int):
         # constant across activities
         self.lot_num = lot_num
-        self.initial_timestamp: datetime = 0
+        self.initial_timestamp: float = 0
         self.initial_balance: float = 0
         self.basis_price: float = 0
         # "update" means last activity that modified the lot
-        self.update_timestamp: datetime = 0
+        self.update_timestamp: float = 0
         self.update_amount_delta = 0
         self.update_asset_price = 0
         self.balance: float = 0
@@ -42,20 +42,20 @@ class LotState:
         #leave all update* attributes zero
         return dst
 
-    def acquire(self, timestamp: datetime, initital_balance: float, basis_price: float):
+    def acquire(self, timestamp: float, initital_balance: float, basis_price: float):
         # constant for all state of this lot
-        self.initial_timestamp: datetime = timestamp
+        self.initial_timestamp: float = timestamp
         self.initial_balance: float = initital_balance
         self.basis_price: float = basis_price
         # values from the most recent update
-        self.update_timestamp: datetime = timestamp
+        self.update_timestamp: float = timestamp
         self.update_amount_delta = initital_balance
         self.update_asset_price = basis_price
         # current state value
         self.balance: float = initital_balance
 
 
-    def dispose(self, timestamp: datetime, amount: float, price: float) -> float:
+    def dispose(self, timestamp: float, amount: float, price: float) -> float:
         ''' subtract amount from lot balance and update vars
 
             returns overdraw amount > 0 if amount > lot balance
@@ -77,10 +77,10 @@ class LotState:
 
     def to_json_dict(self) -> Dict:
         return {
-            "initial_timestamp": self.initial_timestamp.strftime(Acquisition.DATETIME_FORMAT),
+            "initial_timestamp": self.initial_timestamp,
             "initial_balance": self.initial_balance,
             "basis_price": self.basis_price,
-            "update_timestamp": self.update_timestamp.strftime(Acquisition.DATETIME_FORMAT),
+            "update_timestamp": self.update_timestamp,
             "update_amount_delta": self.update_amount_delta,
             "upadate_asset_price": self.update_asset_price,
             "balance": self.balance
@@ -111,7 +111,7 @@ class StashState:
 
     # TX/Acq properties
     @property
-    def timestamp(self) -> datetime:
+    def timestamp(self) -> float:
         return self.activity.timestamp
 
     @property
@@ -181,11 +181,23 @@ class Stash:
     """The container object for a currency/commodity
 
     """
-    def __init__(self, currency_name: str = "", acqs: List[Acquisition] = [], disps: List[Disposition] = []) -> None:
+    def __init__(self, currency_name: str = "", title: str = "",
+                 acqs: List[Acquisition] = [],
+                 disps: List[Disposition] = []) -> None:
         self.currency_name = currency_name
+        self.title = title
         self.acquisitions: List[Acquisition] = acqs
         self.dispositions: List[Disposition] = disps
         self.states: List[StashState] = []
+
+    def update(self) -> None:
+        """Rebuild after load or edit of transactions
+
+            Re-sorts transaction types lists and rebuilds states
+        """
+        self.acquisitions = sorted( self.acquisitions,  key=lambda a: a.timestamp)
+        self.dispositions = sorted( self.dispositions,  key=lambda d: d.timestamp)
+        self.generate_states()
 
     def generate_states(self):
         activities: List[Any] =  [act for act in (self.acquisitions + self.dispositions)]
@@ -193,6 +205,7 @@ class Stash:
 
         state: StashState = StashState()
         # this state, before anything at all has happened, does not go into the states list
+        self.states = []
         for idx, act in enumerate(sortedActivities):
             state = state.apply_activity(idx, act)
             self.states.append(state)
@@ -206,13 +219,15 @@ class Stash:
 
             {
                 "currency_name": "BTC",
+                "title: "My Bitcoin Stash",
                 "acquisitions": [Acq1, Acq2...],
                 "dispositions": [Disp1, Disp2...]
             }
 
         This should be called inside a try block
         """
-        stash = Stash(jd["currency_name"])
+        title = jd.get("title", "")  #TODO This is awkward while we transition from JSON without "title"
+        stash = Stash(jd["currency_name"], title)
         stash.acquisitions = sorted( [Acquisition.from_json_dict(acq) for acq in jd["acquisitions"]],  key=lambda acq: acq.timestamp)
         stash.dispositions = sorted( [Disposition.from_json_dict(dis) for dis in jd["dispositions"]],  key=lambda dis: dis.timestamp)
         return stash
@@ -222,6 +237,7 @@ class Stash:
         """
         return {
             "currency_name": self.currency_name,
+            "title": self.title,
             "acquisitions": [acq.to_json_dict() for acq in self.acquisitions],
             "dispositions": [dis.to_json_dict() for dis in self.dispositions]
         }
@@ -246,14 +262,20 @@ class StatesTableModel(QAbstractTableModel):
 
     HEADER_LABELS = ["Date", "Type", "Amount", "Price", "Fees", "Balance", "Lots Affected", "Comment", "Reference"]
 
-    def __init__(self, data: List[StashState] = []):
+    def __init__(self, stashStates: List[StashState] = []) -> None:
         super(StatesTableModel, self).__init__()
-        self.states_list = data
+        self.states_list = stashStates
+
+    def reset_model(self, stashStates: List[StashState]) -> None:
+        self.beginResetModel()
+        self.states_list = stashStates if stashStates else []
+        self.endResetModel()
+
 
     def fetch_data_str(self, row: int, col: int) -> str:
         state = self.states_list[row]
         if col == StatesTableModel.TIMESTAMP_IDX:
-            return state.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+            return datetime.fromtimestamp(state.timestamp,tz=timezone.utc).strftime(Acquisition.DATETIME_FORMAT)
         if col == StatesTableModel.TX_TYPE_IDX:
             return str(state.activity)
         if col == StatesTableModel.ASSET_AMOUNT_IDX:
@@ -265,7 +287,7 @@ class StatesTableModel(QAbstractTableModel):
         if col == StatesTableModel.BALANCE_IDX:
             return f"{state.balance:.8f}"
         if col == StatesTableModel.LOTS_AFFECTED_IDX:
-            return "\n".join(f"{l.lot_num}: {l.update_amount_delta:.8f}" for l in state.lots_affected)
+            return "\n".join(f"{l.lot_num}: {l.update_amount_delta:+.8f}" for l in state.lots_affected)
             #return ", ".join(f"{idx}: {l.update_amount_delta:.8f}" for (idx,l) in state.lots_affected)
         if col == StatesTableModel.COMMENT_IDX:
             return state.comment

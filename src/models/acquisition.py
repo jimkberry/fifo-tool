@@ -1,11 +1,10 @@
 import sys
 import json
-from datetime import datetime
+from datetime import datetime,timezone
 from typing import List, Dict
 
-from PySide6.QtCore import Qt, QAbstractTableModel, QDateTime
-from PySide6.QtWidgets import  QPushButton, QMessageBox
-from PySide6.QtGui import QColor
+from PySide6.QtCore import Qt, QAbstractTableModel
+from PySide6.QtWidgets import  QMessageBox
 
 from models.transaction import Transaction
 
@@ -13,7 +12,7 @@ class Acquisition(Transaction):
     """The receipt of a 'lot' of a commodity. Could be a purchase, a gift, or a payment
 
     ctor params:
-    acq_datetime: datetime -- When the lot was acquired
+    timestamp: float -- When the lot was acquired
     asset_amount: float -- The amount when the lot was acquired
     asset_price: float --  The unit cost of the commodity when acqired
     fees: float -- might be zero
@@ -23,9 +22,9 @@ class Acquisition(Transaction):
     def __str__(self) -> str:
         return 'Acq'
 
-    def __init__(self, acq_datetime: datetime, asset_amount: float,
+    def __init__(self, timestamp: float, asset_amount: float,
                  asset_price: float, fees: float, comment: str = None) -> None:
-        super().__init__( acq_datetime, asset_amount, asset_price, fees, comment)
+        super().__init__( timestamp, asset_amount, asset_price, fees, comment)
 
     @classmethod
     def duplicate(cls, other: "Acquisition") -> "Acquisition":
@@ -37,15 +36,16 @@ class Acquisition(Transaction):
 
         Like this:
             {
-                "timestamp": "12/01/2015 14:19:00",
+                "timestamp": 1493251200.0,
                 "asset_amount": 27.76054701,
                 "asset_price": 363.89
                 "fees": 0.00,
                 "comment": "Some comment"
             }
         """
+        # remove this strptime stuff. Or at least the '+0000' to make it zulu time
         return cls(
-            datetime.strptime(jd["timestamp"], Transaction.DATETIME_FORMAT),
+                jd["timestamp"],
                 jd["asset_amount"],
                 jd["asset_price"],
                 jd["fees"],
@@ -54,7 +54,7 @@ class Acquisition(Transaction):
 
     def to_json_dict(self) -> Dict:
         return  {
-            "timestamp": self.timestamp.strftime(Transaction.DATETIME_FORMAT),
+            "timestamp": self.timestamp,
             "asset_amount": self.asset_amount,
             "asset_price": self.asset_price,
             "fees": self.fees,
@@ -80,12 +80,16 @@ class AcqTableModel(QAbstractTableModel):
 
     HEADER_LABELS = ["Date", "Amount", "Price", "Comment", "", ""]
 
-    def __init__(self, data: List[Acquisition] = []):
+    def __init__(self, acquisitions: List[Acquisition] = []) -> None:
         super(AcqTableModel, self).__init__()
-        self.acquisitionsList = data  # this is the actual data
+        self.acquisitionsList = acquisitions
         self.edit_buff = None
         self.row_under_edit: int = -1 # only a single row can be edited at a time
 
+    def reset_model(self, acquisitions: List[Acquisition] = []) -> None:
+        self.beginResetModel()
+        self.acquisitionsList = acquisitions if acquisitions else []
+        self.endResetModel()
 
     def edit_row(self, row: int = -1) -> None:
         if self.row_under_edit == -1:
@@ -96,7 +100,6 @@ class AcqTableModel(QAbstractTableModel):
             self.cancel_edit()
             if row != prev_edit_row:
                 self.row_under_edit = row
-
 
     def cancel_edit(self) -> None:
         self.row_under_edit = -1
@@ -110,7 +113,9 @@ class AcqTableModel(QAbstractTableModel):
     def set_acq_data(self, acq: Acquisition, col: int, str_val: str) -> bool:
         try:
             if col == AcqTableModel.ACQ_TIMESTAMP_IDX:
-                acq.timestamp = datetime.strptime(str_val, "%Y-%m-%d %H:%M:%S")
+                # Note that strptime() ignores TZ abbreviations, so we have to use the ugly "+0000"
+                dt = datetime.strptime(str_val, Acquisition.DATETIME_FORMAT)
+                acq.timestamp = dt.timestamp()
             if col == AcqTableModel.ACQ_ASSET_AMOUNT_IDX:
                 acq.asset_amount = float(str_val)
             if col == AcqTableModel.ACQ_ASSET_PRICE_IDX:
@@ -124,7 +129,7 @@ class AcqTableModel(QAbstractTableModel):
 
     def fetch_data(self, acq: Acquisition, col: int) -> object:
         if col == AcqTableModel.ACQ_TIMESTAMP_IDX:
-            return acq.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+            return datetime.fromtimestamp(acq.timestamp,tz=timezone.utc).strftime(Acquisition.DATETIME_FORMAT)
         if col == AcqTableModel.ACQ_ASSET_AMOUNT_IDX:
             return f"{acq.asset_amount:.8f}"
         if col == AcqTableModel.ACQ_ASSET_PRICE_IDX:
@@ -136,24 +141,10 @@ class AcqTableModel(QAbstractTableModel):
         if col == AcqTableModel.ACQ_ACCEPT_BTN_IDX:
             return None
 
-    # def fetch_data(self, row: int, col: int) -> object:
-    #     acq = self.acquisitionsList[row]
-    #     if col == AcqTableModel.ACQ_TIMESTAMP_IDX:
-    #         return QDateTime(acq.timestamp)
-    #     if col == AcqTableModel.ACQ_ASSET_AMOUNT_IDX:
-    #         return acq.asset_amount
-    #     if col == AcqTableModel.ACQ_ASSET_PRICE_IDX:
-    #         return acq.asset_price
-    #     if col == AcqTableModel.ACQ_COMMENT_IDX:
-    #         return acq.comment
-
-
     # overrides
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = ...):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return AcqTableModel.HEADER_LABELS[section]
-        #if orientation == Qt.Vertical and role == Qt.DisplayRole:
-        #    return f"{section + 1}"
 
     def flags(self, index):
         if index.row() == self.row_under_edit:

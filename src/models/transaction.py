@@ -11,18 +11,22 @@ class Transaction():
     """Acquiring or disposing of some of a commodity
 
     ctor params:
-    timestamp: datetime -- When the transaction occurrred
+    timestamp: float -- When the transaction occurrred
     asset_price: float --  The market unit price of the commodity at timestamp
     asset_amount: float -- The amount involved. Always positive.
     fees: float -- any fees or taxes or whatever
     comment: str -- as in 'Mike repaying me for lunch'
     """
-    DATETIME_FORMAT = "%m/%d/%Y %H:%M:%S" # when serialized
+    # Note that %Z DOES NOT WORK! A tz abbreviation is ignored by strptime
+    # you MUST use a numeric offset (which is kinda ugly when displayed)
+    # DATETIME_FORMAT = "%m/%d/%Y %H:%M:%S %Z" # "12/27/2016 14:14:00 UTC"
 
-    def __init__(self, timestamp: datetime,  asset_amount: float, asset_price: float,
+    DATETIME_FORMAT = "%m/%d/%Y %H:%M:%S %z" # "12/27/2016 14:14:00 +0000"
+
+    def __init__(self, timestamp: float,  asset_amount: float, asset_price: float,
                   fees: float, comment: str = None) -> None:
 
-        self.timestamp = timestamp  #datetime.strftime(timestamp, Transaction.DATETIME_FORMAT)
+        self.timestamp = timestamp # posix epoch
         self.asset_price = asset_price
         self.asset_amount = asset_amount
         self.fees = fees
