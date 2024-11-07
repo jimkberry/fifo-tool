@@ -68,6 +68,7 @@ class AcquisitionsPage(QWidget):
 
     def reset_data(self, acquisitions: List[Acquisition]) -> None:
         self.model.reset_model(acquisitions)
+        self.table.resizeColumnsToContents()
         self.table.viewport().update()
 
     def edit_acquisition(self) -> None:
@@ -211,6 +212,7 @@ class DispositionsPage(QWidget):
 
     def reset_data(self, dispositions: List[Disposition]) -> None:
         self.model.reset_model(dispositions)
+        self.table.resizeColumnsToContents()
         self.table.viewport().update()
 
 
@@ -305,7 +307,7 @@ class DispositionsPage(QWidget):
             except Exception as ex:
                 # TODO: handle this with a popup thingy
                 QMessageBox.critical(self, "Oops", str(ex))
-            self.model.dispositionsList = res
+            self.model.dispositionsList += res
             self.model.modelReset.emit()
             self.table.resizeColumnsToContents()
 
@@ -335,6 +337,7 @@ class TransactionStatesPage(QWidget):
 
     def reset_data(self, states: List[StashState]) -> None:
         self.model.reset_model(states)
+        self.table.resizeColumnsToContents()
         self.table.viewport().update()
 
 

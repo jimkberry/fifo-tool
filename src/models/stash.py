@@ -68,7 +68,7 @@ class LotState:
         overdraw: float = amount - self.balance
         if overdraw > 0:
             self.update_amount_delta = -self.balance
-            self.balance = 0
+            self.balance = 0 # TODO: maybe set this to -overdraw and track negative balances?
             return overdraw
         else:
             self.update_amount_delta = -amount
