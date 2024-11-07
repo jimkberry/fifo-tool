@@ -342,7 +342,9 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.stash = self.load_stash('new_stash.json')
+        #self.stash = self.load_stash('new_stash.json')
+        self.stash = Stash('BTC','ya ya ya')
+
         self.resize(1024, 768)
         self.setWindowTitle(f'{self.stash.currency_name}: {self.stash.title}')
         menu = self.menuBar()
