@@ -6,6 +6,8 @@ from typing import List, Dict
 from PySide6.QtCore import Qt, QAbstractTableModel
 from PySide6.QtWidgets import  QMessageBox
 
+import dateparser
+
 from models.transaction import Transaction
 
 class Acquisition(Transaction):
@@ -43,7 +45,6 @@ class Acquisition(Transaction):
                 "comment": "Some comment"
             }
         """
-        # remove this strptime stuff. Or at least the '+0000' to make it zulu time
         return cls(
                 jd["timestamp"],
                 jd["asset_amount"],
@@ -114,7 +115,10 @@ class AcqTableModel(QAbstractTableModel):
         try:
             if col == AcqTableModel.ACQ_TIMESTAMP_IDX:
                 # Note that strptime() ignores TZ abbreviations, so we have to use the ugly "+0000"
-                dt = datetime.strptime(str_val, Acquisition.DATETIME_FORMAT)
+                # dt = datetime.strptime(str_val, Acquisition.DATETIME_FORMAT)
+                # if dt.tzinfo == None:
+                #     raise ValueError("Invalid date format. Unknown timezone")
+                dt = dateparser.parse(str_val, settings={'RETURN_AS_TIMEZONE_AWARE': True})
                 acq.timestamp = dt.timestamp()
             if col == AcqTableModel.ACQ_ASSET_AMOUNT_IDX:
                 acq.asset_amount = float(str_val)

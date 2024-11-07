@@ -7,6 +7,8 @@ from PySide6.QtCore import Qt, QAbstractTableModel
 from models.transaction import Transaction
 from PySide6.QtWidgets import  QMessageBox
 
+import dateparser
+
 class Disposition(Transaction):
     """The getting-rid-of some of a commodity. Could be a sale, a gift, or a payment
 
@@ -120,7 +122,7 @@ class DisTableModel(QAbstractTableModel):
         try:
             if col == DisTableModel.DIS_TIMESTAMP_IDX:
                 # Note that strptime() ignores TZ abbreviations, so we have to use the ugly "+0000"
-                dt = datetime.strptime(str_val, Transaction.DATETIME_FORMAT)
+                dt = dateparser.parse(str_val, settings={'RETURN_AS_TIMEZONE_AWARE': True})
                 dis.timestamp = dt.timestamp()
             if col == DisTableModel.DIS_AMOUNT_IDX:
                 dis.asset_amount = float(str_val)
