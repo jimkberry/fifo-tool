@@ -178,13 +178,13 @@ class StashState:
 
 
 class Stash:
-    """The container object for a currency/commodity
+    """The container object for an asset/commodity
 
     """
-    def __init__(self, currency_name: str = "", title: str = "",
+    def __init__(self, asset: str = "", title: str = "",
                  acqs: List[Acquisition] = [],
                  disps: List[Disposition] = []) -> None:
-        self.currency_name = currency_name
+        self.asset = asset
         self.title = title
         self.acquisitions: List[Acquisition] = acqs
         self.dispositions: List[Disposition] = disps
@@ -218,7 +218,7 @@ class Stash:
         Looks like this:
 
             {
-                "currency_name": "BTC",
+                "asset": "BTC",
                 "title: "My Bitcoin Stash",
                 "acquisitions": [Acq1, Acq2...],
                 "dispositions": [Disp1, Disp2...]
@@ -227,16 +227,19 @@ class Stash:
         This should be called inside a try block
         """
         title = jd.get("title", "")  #TODO This is awkward while we transition from JSON without "title"
-        stash = Stash(jd["currency_name"], title)
-        stash.acquisitions = sorted( [Acquisition.from_json_dict(acq) for acq in jd["acquisitions"]],  key=lambda acq: acq.timestamp)
-        stash.dispositions = sorted( [Disposition.from_json_dict(dis) for dis in jd["dispositions"]],  key=lambda dis: dis.timestamp)
+        stash = Stash(jd["asset"], title)
+        # Sort and filter out any wrong-commodity stuff
+        stash.acquisitions = sorted( [Acquisition.from_json_dict(acq) for acq in jd["acquisitions"]
+                                    if acq.asset== stash.asset], key=lambda a: a.timestamp)
+        stash.dispositions = sorted( [Disposition.from_json_dict(dis) for dis in jd["dispositions"]
+                                    if dis.asset== stash.asset], key=lambda d: d.timestamp)
         return stash
 
     def to_json_dict(self) -> Dict:
         """Serialize to a json dict
         """
         return {
-            "currency_name": self.currency_name,
+            "asset": self.asset,
             "title": self.title,
             "acquisitions": [acq.to_json_dict() for acq in self.acquisitions],
             "dispositions": [dis.to_json_dict() for dis in self.dispositions]

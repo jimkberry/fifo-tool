@@ -24,10 +24,11 @@ class Transaction():
 
     # DATETIME_FORMAT = "%m/%d/%Y %H:%M:%S %z" # "12/27/2016 14:14:00 +0000"
 
-    def __init__(self, timestamp: float,  asset_amount: float, asset_price: float,
+    def __init__(self, timestamp: float, asset: str, asset_amount: float, asset_price: float,
                   fees: float, comment: str = None) -> None:
 
         self.timestamp = timestamp # posix epoch
+        self.asset: str = asset
         self.asset_price = asset_price
         self.asset_amount = asset_amount
         self.fees = fees

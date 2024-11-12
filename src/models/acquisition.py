@@ -24,13 +24,15 @@ class Acquisition(Transaction):
     def __str__(self) -> str:
         return 'Acq'
 
-    def __init__(self, timestamp: float, asset_amount: float,
+    def __init__(self, timestamp: float, asset: str, asset_amount: float,
                  asset_price: float, fees: float, comment: str = None) -> None:
-        super().__init__( timestamp, asset_amount, asset_price, fees, comment)
+        super().__init__( timestamp, asset, asset_amount, asset_price, fees, comment)
+        assert asset != None
 
     @classmethod
     def duplicate(cls, other: "Acquisition") -> "Acquisition":
-        return cls(other.timestamp, other.asset_amount, other.asset_price, other.fees, other.comment)
+        # TODO: why doesn;t this (and other methods) let transactuio do the transaction attrs?
+        return cls(other.timestamp, other.asset, other.asset_amount, other.asset_price, other.fees, other.comment)
 
     @classmethod
     def from_json_dict(cls, jd: Dict) -> "Acquisition":
@@ -39,6 +41,7 @@ class Acquisition(Transaction):
         Like this:
             {
                 "timestamp": 1493251200.0,
+                "asset": "BTC",
                 "asset_amount": 27.76054701,
                 "asset_price": 363.89
                 "fees": 0.00,
@@ -47,6 +50,7 @@ class Acquisition(Transaction):
         """
         return cls(
                 jd["timestamp"],
+                jd["asset"],
                 jd["asset_amount"],
                 jd["asset_price"],
                 jd["fees"],
@@ -56,6 +60,7 @@ class Acquisition(Transaction):
     def to_json_dict(self) -> Dict:
         return  {
             "timestamp": self.timestamp,
+            "asset": self.asset,
             "asset_amount": self.asset_amount,
             "asset_price": self.asset_price,
             "fees": self.fees,
@@ -81,13 +86,17 @@ class AcqTableModel(QAbstractTableModel):
 
     HEADER_LABELS = ["Date", "Amount", "Price", "Comment", "", ""]
 
-    def __init__(self, acquisitions: List[Acquisition] = []) -> None:
+    def __init__(self, asset: str, acquisitions: List[Acquisition] = []) -> None:
         super(AcqTableModel, self).__init__()
+        assert asset != None
+        self.asset = asset
         self.acquisitionsList = acquisitions
         self.edit_buff = None
         self.row_under_edit: int = -1 # only a single row can be edited at a time
 
-    def reset_model(self, acquisitions: List[Acquisition] = []) -> None:
+    def reset_model(self, asset: str, acquisitions: List[Acquisition] = []) -> None:
+        assert asset != None
+        self.asset = asset
         self.beginResetModel()
         self.acquisitionsList = acquisitions if acquisitions else []
         self.endResetModel()

@@ -31,11 +31,11 @@ class AcquisitionsPage(QWidget):
 
     model_changed_sig = Signal(object, object) # params are: acquisitions, dispositions
 
-    def __init__(self, acquisitions: List[Acquisition]) -> None:
+    def __init__(self, asset: str,  acquisitions: List[Acquisition]) -> None:
         super().__init__()
 
         self.table = QTableView()
-        self.model = AcqTableModel(acquisitions)
+        self.model = AcqTableModel(asset, acquisitions)
         self.table.setModel(self.model)
         self.table.showGrid()
         self.table.setGridStyle(Qt.SolidLine)
@@ -126,7 +126,7 @@ class AcquisitionsPage(QWidget):
         self.table.viewport().update()
 
     def add_acquisition(self) -> None:
-        new_acq = Acquisition(datetime.timestamp(datetime.now(timezone.utc)), 0, 0, 0, "New Acquisition")
+        new_acq = Acquisition(datetime.timestamp(datetime.now(timezone.utc)), self.model.asset, 0, 0, 0, "New Acquisition")
         self.model.acquisitionsList.append(new_acq) # TODO: fix fugliness
         self.model_changed_sig.emit(self.model.acquisitionsList, None) # main window catches this, rebuilds stash, and updates views
 
@@ -175,11 +175,11 @@ class DispositionsPage(QWidget):
 
     model_changed_sig = Signal(object, object) # params are: acquisitions, dispositions
 
-    def __init__(self, dispositions: List[Disposition]) -> None:
+    def __init__(self, asset: str, dispositions: List[Disposition]) -> None:
         super().__init__()
 
         self.table = QTableView()
-        self.model = DisTableModel(dispositions)
+        self.model = DisTableModel(asset, dispositions)
         self.table.setModel(self.model)
         self.table.showGrid()
         self.table.setGridStyle(Qt.SolidLine)
@@ -271,8 +271,8 @@ class DispositionsPage(QWidget):
         self.table.viewport().update()
 
     def add_disposition(self) -> None:
-        new_acq = Disposition(datetime.timestamp(datetime.now(timezone.utc)), 0, 0, 0, "", "New Disposition")
-        self.model.dispositionsList.append(new_acq) # TODO: fix fugliness
+        new_dis = Disposition(datetime.timestamp(datetime.now(timezone.utc)), self.model.asset, 0, 0, 0, "", "New Disposition")
+        self.model.dispositionsList.append(new_dis) # TODO: fix fugliness
         self.model_changed_sig.emit(None, self.model.dispositionsList )
 
     def delete_disposition(self) -> None:
@@ -349,7 +349,7 @@ class MainWindow(QMainWindow):
         self.stash = Stash('BTC','ya ya ya')
 
         self.resize(1024, 768)
-        self.setWindowTitle(f'{self.stash.currency_name}: {self.stash.title}')
+        self.setWindowTitle(f'{self.stash.asset}: {self.stash.title}')
         menu = self.menuBar()
 
         new_stash_action = QAction("&New Stash", self)
@@ -369,11 +369,11 @@ class MainWindow(QMainWindow):
         tabs = QTabWidget()
         self.setCentralWidget(tabs)
 
-        self.acqPage = AcquisitionsPage(self.stash.acquisitions)
+        self.acqPage = AcquisitionsPage(self.stash.asset, self.stash.acquisitions)
         self.acqPage.model_changed_sig[object, object].connect(self.on_model_changed)
         tabs.addTab(self.acqPage, "Acquisitions")
 
-        self.dispPage = DispositionsPage(self.stash.dispositions)
+        self.dispPage = DispositionsPage(self.stash.asset, self.stash.dispositions)
         self.dispPage.model_changed_sig[object, object].connect(self.on_model_changed)
         tabs.addTab(self.dispPage, "Dispositions")
 
@@ -387,7 +387,7 @@ class MainWindow(QMainWindow):
                 super().__init__()
 
                 self.setWindowTitle("New Stash!")
-                self.currency_edit = QLineEdit("Currency")
+                self.asset_edit = QLineEdit("Asset Name")
                 self.title_edit = QLineEdit("Stash Title")
 
                 QBtn = (
@@ -399,15 +399,15 @@ class MainWindow(QMainWindow):
                 self.buttonBox.rejected.connect(self.reject)
 
                 layout = QVBoxLayout()
-                layout.addWidget(self.currency_edit)
+                layout.addWidget(self.asset_edit)
                 layout.addWidget(self.title_edit)
                 layout.addWidget(self.buttonBox)
                 self.setLayout(layout)
 
         dlg = NewDlg()
         if dlg.exec():
-            self.stash = Stash( dlg.currency_edit.text(), dlg.title_edit.text() )
-            self.setWindowTitle(f'{self.stash.currency_name}: {self.stash.title}')
+            self.stash = Stash( dlg.asset_edit.text(), dlg.title_edit.text() )
+            self.setWindowTitle(f'{self.stash.asset}: {self.stash.title}')
             self.on_model_changed(None, None) # uses self.whatever if none
 
     def open_stash(self):
@@ -418,7 +418,7 @@ class MainWindow(QMainWindow):
         stash = self.load_stash(filename)
         if stash:
             self.stash = stash
-            self.setWindowTitle(f'{self.stash.currency_name}: {self.stash.title}')
+            self.setWindowTitle(f'{self.stash.asset}: {self.stash.title}')
             self.on_model_changed(None, None)
 
     def load_stash(self, filename: str) -> Stash:

@@ -14,6 +14,7 @@ class Disposition(Transaction):
 
     ctor params:
     timestamp: float -- When the thing happened (posix timestamp)
+    asset: str -- the commodity involved
     asset_amount: float -- The amount disposed (negative number)
     asset_price: float --  The unit price of the commodity when disposed
     fees: float -- might be zero
@@ -24,15 +25,16 @@ class Disposition(Transaction):
     def __str__(self) -> str:
         return 'Dis'
 
-    def __init__(self, timestamp: datetime, asset_amount: float, asset_price: float,
+    def __init__(self, timestamp: float, asset: str, asset_amount: float, asset_price: float,
                  fees: float, reference: str, comment: str):
-        super().__init__( timestamp, asset_amount, asset_price, fees, comment)
+        super().__init__( timestamp, asset, asset_amount, asset_price, fees, comment)
         self.reference = reference
+        assert asset != None
 
     @classmethod
     def duplicate(cls, other: "Disposition") -> "Disposition":
-        return cls(other.timestamp, other.asset_amount, other.asset_price,
-                   other.fees, other.reference, other.comment)
+        return cls(other.timestamp, other.asset, other.asset_amount,
+                   other.asset_price, other.fees, other.reference, other.comment)
 
 
     @classmethod
@@ -42,6 +44,7 @@ class Disposition(Transaction):
         Like this:
             {
                 "timestamp": 1493251200.0,
+                "asset": "ETH",
                 "asset_amount": 5,
                 "asset_price": 1014.95,
                 "fees": 0,
@@ -51,6 +54,7 @@ class Disposition(Transaction):
         """
         return cls(
             jd["timestamp"],
+            jd["asset"],
             jd["asset_amount"],
             jd["asset_price"],
             jd["fees"],
@@ -62,6 +66,7 @@ class Disposition(Transaction):
     def to_json_dict(self) -> Dict:
         return {
             "timestamp": self.timestamp,
+            "asset": self.asset,
             "asset_amount": self.asset_amount,
             "asset_price": self.asset_price,
             "fees": self.fees,
@@ -88,13 +93,17 @@ class DisTableModel(QAbstractTableModel):
 
     HEADER_LABELS = ["Date", "Amount", "Price", "Fees", "Reference", "Comment", "", ""]
 
-    def __init__(self, dispositions: List[Disposition]):
+    def __init__(self, asset: str, dispositions: List[Disposition]):
         super(DisTableModel, self).__init__()
+        assert asset != None
+        self.asset = asset
         self.dispositionsList = dispositions
         self.edit_buff = None
         self.row_under_edit: int = -1 # only a single row can be edited at a time
 
-    def reset_model(self, dispositions: List[Disposition] = []) -> None:
+    def reset_model(self, asset: str, dispositions: List[Disposition] = []) -> None:
+        assert asset!= None
+        self.asset = asset
         self.beginResetModel()
         self.dispositionsList = dispositions if dispositions else []
         self.endResetModel()

@@ -15,13 +15,13 @@ from stash_test_data import TEST_ACQ_1, TEST_ACQ_2, TEST_DISP_1, TEST_DISP_2, ST
 def test_stash_init():
     #default
     s = Stash()
-    assert s.currency_name == ""
+    assert s.asset == ""
     assert len(s.acquisitions) == 0
     assert len(s.dispositions) == 0
 
     # w/params
     # s = Stash("BTC", acqs, disps)
-    # assert s.currency_name == "BTC"
+    # assert s.asset == "BTC"
     # assert len(s.acquisitions) == 1
     # assert len(s.dispositions) == 1
     # assert isinstance(s.acquisitions[0], Acquisition)
@@ -34,7 +34,7 @@ def test_stash_from_json_dict(mocker):
 
     s = Stash.from_json_dict(STASH_JSON_DICT_1)
 
-    assert s.currency_name == "BTC"
+    assert s.asset == "BTC"
     assert len(s.acquisitions) == 2  # [TEST_ACQ_1, TEST_ACQ2]
     assert len(s.dispositions) == 2  # [TEST_DISP_1, TEST_DISP_2]
     assert isinstance(s.acquisitions[0], Acquisition)
