@@ -1,0 +1,42 @@
+{
+  "asset": "BTC",
+  "title": "Coinbase Pro BTC orders - 2017",
+  "acquisitions": [
+    {
+      "timestamp": 1600000000,
+      "asset": "BTC",
+      "asset_amount": 8.0,
+      "asset_price": 100.68,
+      "fees": 0,
+      "comment": ""
+    },
+    {
+      "timestamp": 1600200000,
+      "asset": "BTC",
+      "asset_amount": 5.0,
+      "asset_price": 105,
+      "fees": 0,
+      "comment": ""
+    }
+  ],
+  "dispositions": [
+    {
+      "timestamp": 1600100000,
+      "asset": "BTC",
+      "asset_amount": 4.3691602,
+      "asset_price": 200,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "CB Pro Order Id: 50"
+    },
+    {
+      "timestamp": 1600300000,
+      "asset": "BTC",
+      "asset_amount": 5.19383309,
+      "asset_price": 120,
+      "fees": 0.0,
+      "comment": "",
+      "reference": "CB Pro Order Id: 100"
+    }
+  ]
+}
