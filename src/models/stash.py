@@ -256,11 +256,11 @@ class StatesTableModel(QAbstractTableModel):
     FEES_IDX = 4 # tx/acq
     BALANCE_IDX = 5 # state
     LOTS_AFFECTED_IDX = 6 # state
-    COMMENT_IDX = 7 # tx/acq
-    REFERENCE_IDX = 8 # disp
+    REFERENCE_IDX = 7 # disp
+    COMMENT_IDX = 8 # tx/acq
     COLUMN_COUNT = 9
 
-    HEADER_LABELS = ["Date", "Type", "Amount", "Price", "Fees", "Balance", "Lots Affected", "Comment", "Reference"]
+    HEADER_LABELS = ["Date", "Type", "Amount", "Price", "Fees", "Balance", "Lots Affected", "Reference", "Comment"]
 
     def __init__(self, stashStates: List[StashState] = []) -> None:
         super(StatesTableModel, self).__init__()
@@ -289,10 +289,10 @@ class StatesTableModel(QAbstractTableModel):
         if col == StatesTableModel.LOTS_AFFECTED_IDX:
             return "\n".join(f"{l.lot_num}: {l.update_amount_delta:+.8f}" for l in state.lots_affected)
             #return ", ".join(f"{idx}: {l.update_amount_delta:.8f}" for (idx,l) in state.lots_affected)
-        if col == StatesTableModel.COMMENT_IDX:
-            return state.comment
         if col == StatesTableModel.REFERENCE_IDX:
             return state.reference
+        if col == StatesTableModel.COMMENT_IDX:
+            return state.comment
 
 
     # overrides

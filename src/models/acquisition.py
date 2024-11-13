@@ -19,6 +19,7 @@ class Acquisition(Transaction):
     asset_amount: float -- The amount when the lot was acquired
     asset_price: float --  The unit cost of the commodity when acqired
     fees: float -- might be zero
+    reference: str -- a transaction or order "id" if there is one
     comment: str -- as in 'Mike repaying me for lunch'
     """
 
@@ -26,14 +27,15 @@ class Acquisition(Transaction):
         return 'Acq'
 
     def __init__(self, timestamp: float, asset: str, asset_amount: float,
-                 asset_price: float, fees: float, comment: str = None) -> None:
-        super().__init__( timestamp, asset, asset_amount, asset_price, fees, comment)
+                 asset_price: float, fees: float, reference: str, comment: str = None) -> None:
+        super().__init__( timestamp, asset, asset_amount, asset_price, fees, reference, comment)
         assert asset != None
 
     @classmethod
     def duplicate(cls, other: "Acquisition") -> "Acquisition":
         # TODO: why doesn;t this (and other methods) let transactuio do the transaction attrs?
-        return cls(other.timestamp, other.asset, other.asset_amount, other.asset_price, other.fees, other.comment)
+        return cls(other.timestamp, other.asset, other.asset_amount, other.asset_price,
+                   other.fees, other.reference, other.comment)
 
     @classmethod
     def from_json_dict(cls, jd: Dict) -> "Acquisition":
@@ -46,6 +48,7 @@ class Acquisition(Transaction):
                 "asset_amount": 27.76054701,
                 "asset_price": 363.89
                 "fees": 0.00,
+                "reference: "Tx ID 0xE234490D8"
                 "comment": "Some comment"
             }
         """
@@ -55,6 +58,7 @@ class Acquisition(Transaction):
                 jd["asset_amount"],
                 jd["asset_price"],
                 jd["fees"],
+                jd["reference"],
                 jd.get("comment", "")
             )
 
@@ -65,6 +69,7 @@ class Acquisition(Transaction):
             "asset_amount": self.asset_amount,
             "asset_price": self.asset_price,
             "fees": self.fees,
+            "reference": self.reference,
             "comment": self.comment
         }
 
@@ -80,12 +85,13 @@ class AcqTableModel(QAbstractTableModel):
     ACQ_TIMESTAMP_IDX = 0
     ACQ_ASSET_AMOUNT_IDX = 1
     ACQ_ASSET_PRICE_IDX = 2
-    ACQ_COMMENT_IDX = 3
-    ACQ_CANCEL_BTN_IDX = 4
-    ACQ_ACCEPT_BTN_IDX = 5
-    ACQ_COLUMN_COUNT = 6
+    ACQ_REF_IDX = 3
+    ACQ_COMMENT_IDX = 4
+    ACQ_CANCEL_BTN_IDX = 5
+    ACQ_ACCEPT_BTN_IDX = 6
+    ACQ_COLUMN_COUNT = 7
 
-    HEADER_LABELS = ["Date", "Amount", "Price", "Comment", "", ""]
+    HEADER_LABELS = ["Date", "Amount", "Price", "Reference", "Comment", "", ""]
 
     def __init__(self, asset: str, acquisitions: List[Acquisition] = []) -> None:
         super(AcqTableModel, self).__init__()
@@ -134,6 +140,8 @@ class AcqTableModel(QAbstractTableModel):
                 acq.asset_amount = float(str_val)
             if col == AcqTableModel.ACQ_ASSET_PRICE_IDX:
                 acq.asset_price = float(str_val)
+            if col == AcqTableModel.ACQ_REF_IDX:
+                acq.reference = str_val
             if col == AcqTableModel.ACQ_COMMENT_IDX:
                 acq.comment = str_val
             return True
@@ -148,6 +156,8 @@ class AcqTableModel(QAbstractTableModel):
             return f"{acq.asset_amount:.8f}"
         if col == AcqTableModel.ACQ_ASSET_PRICE_IDX:
             return f"{acq.asset_price:.8f}"
+        if col == AcqTableModel.ACQ_REF_IDX:
+            return acq.reference
         if col == AcqTableModel.ACQ_COMMENT_IDX:
             return acq.comment
         if col == AcqTableModel.ACQ_CANCEL_BTN_IDX:

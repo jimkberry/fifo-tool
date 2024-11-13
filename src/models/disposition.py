@@ -27,8 +27,7 @@ class Disposition(Transaction):
 
     def __init__(self, timestamp: float, asset: str, asset_amount: float, asset_price: float,
                  fees: float, reference: str, comment: str):
-        super().__init__( timestamp, asset, asset_amount, asset_price, fees, comment)
-        self.reference = reference
+        super().__init__( timestamp, asset, asset_amount, asset_price, fees, reference, comment)
         assert asset != None
 
     @classmethod
@@ -48,8 +47,8 @@ class Disposition(Transaction):
                 "asset_amount": 5,
                 "asset_price": 1014.95,
                 "fees": 0,
-                "comment": "",
                 "reference": "fd0858a7-4bdf-4278-8d9a-b4045740a32f"
+                "comment": "",
             }
         """
         return cls(
