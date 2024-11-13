@@ -15,6 +15,7 @@ class Acquisition(Transaction):
 
     ctor params:
     timestamp: float -- When the lot was acquired
+    asset: str -- the type of asset acquired
     asset_amount: float -- The amount when the lot was acquired
     asset_price: float --  The unit cost of the commodity when acqired
     fees: float -- might be zero
