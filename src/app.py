@@ -66,8 +66,8 @@ class AcquisitionsPage(QWidget):
 
         self.setLayout(pageLayout)
 
-    def reset_data(self, acquisitions: List[Acquisition]) -> None:
-        self.model.reset_model(acquisitions)
+    def reset_data(self, stash: Stash) -> None:
+        self.model.reset_model(stash.asset, stash.acquisitions)
         self.table.resizeColumnsToContents()
         self.table.viewport().update()
 
@@ -149,22 +149,25 @@ class AcquisitionsPage(QWidget):
                 self.model_changed_sig.emit(self.model.acquisitionsList,None )
 
     def import_file(self):
-        filename, _ = QFileDialog.getOpenFileName(
-            self,
-            "Select a File"
-        )
-        if filename:
-            res = []  # This would be your JSON data.
-            try:
-                with open(filename, 'r') as f:
-                    jsonData = json.load(f) # a List of Dicts
-                res = sorted( [Acquisition.from_json_dict(acq) for acq in jsonData],  key=lambda acq: acq.timestamp)
-            except Exception as ex:
-                # TODO: handle this with a popup thingy
-                QMessageBox.critical(self, "Oops", str(ex))
-            self.model.acquisitionsList = res
-            self.model.modelReset.emit()
-            self.table.resizeColumnsToContents()
+        pass
+
+        # filename, _ = QFileDialog.getOpenFileName(
+        #     self,
+        #     "Select a File"
+        # )
+        # if filename:
+        #     res = []  # This would be your JSON data.
+        #     try:
+        #         with open(filename, 'r') as f:
+        #             jsonData = json.load(f) # a List of Dicts
+        #         acqs = jsonData['acquisitions']
+        #         res = sorted( [Acquisition.from_json_dict(acq) for acq in acqs],  key=lambda acq: acq.timestamp)
+        #     except Exception as ex:
+        #         # TODO: handle this with a popup thingy
+        #         QMessageBox.critical(self, "Oops", str(ex))
+        #     self.model.acquisitionsList = res
+        #     self.model.modelReset.emit()
+        #     self.table.resizeColumnsToContents()
 
     # def save(self):
     #     with open('BTC_acqs.json', 'w') as f:
@@ -210,8 +213,8 @@ class DispositionsPage(QWidget):
 
         self.setLayout(pageLayout)
 
-    def reset_data(self, dispositions: List[Disposition]) -> None:
-        self.model.reset_model(dispositions)
+    def reset_data(self, stash: Stash) -> None:
+        self.model.reset_model(stash.asset, stash.dispositions)
         self.table.resizeColumnsToContents()
         self.table.viewport().update()
 
@@ -294,22 +297,25 @@ class DispositionsPage(QWidget):
                 self.model_changed_sig.emit(None, self.model.dispositionsList )
 
     def import_file(self):
-        filename, _ = QFileDialog.getOpenFileName(
-            self,
-            "Select a File"
-        )
-        if filename:
-            res = []  # This would be your JSON data.
-            try:
-                with open(filename, 'r') as f:
-                    jsonData = json.load(f) # a List of Dicts
-                res = sorted( [Disposition.from_json_dict(dis) for dis in jsonData],  key=lambda dis: dis.timestamp)
-            except Exception as ex:
-                # TODO: handle this with a popup thingy
-                QMessageBox.critical(self, "Oops", str(ex))
-            self.model.dispositionsList += res
-            self.model.modelReset.emit()
-            self.table.resizeColumnsToContents()
+        pass
+
+        # filename, _ = QFileDialog.getOpenFileName(
+        #     self,
+        #     "Select a File"
+        # )
+        # if filename:
+        #     res = []  # This would be your JSON data.
+        #     try:
+        #         with open(filename, 'r') as f:
+        #             jsonData = json.load(f) # a List of Dicts
+        #             disps = jsonData['dispositions']
+        #         res = sorted( [Disposition.from_json_dict(dis) for dis in disps],  key=lambda dis: dis.timestamp)
+        #     except Exception as ex:
+        #         # TODO: handle this with a popup thingy
+        #         QMessageBox.critical(self, "Oops", str(ex))
+        #     self.model.dispositionsList += res
+        #     self.model.modelReset.emit()
+        #     self.table.resizeColumnsToContents()
 
 
 class TransactionStatesPage(QWidget):
@@ -335,8 +341,8 @@ class TransactionStatesPage(QWidget):
 
         self.setLayout(pageLayout)
 
-    def reset_data(self, states: List[StashState]) -> None:
-        self.model.reset_model(states)
+    def reset_data(self, stash: Stash) -> None:
+        self.model.reset_model(stash.asset, stash.states)
         self.table.resizeColumnsToContents()
         self.table.viewport().update()
 
@@ -361,10 +367,14 @@ class MainWindow(QMainWindow):
         save_stash_action = QAction("&Save Stash", self)
         save_stash_action.triggered.connect(self.save_stash)
 
+        import_stash_action = QAction("&Import Data", self)
+        import_stash_action.triggered.connect(self.import_stash)
+
         file_menu = menu.addMenu("&File")
         file_menu.addAction(new_stash_action)
         file_menu.addAction(open_stash_action)
         file_menu.addAction(save_stash_action)
+        file_menu.addAction(import_stash_action)
 
         tabs = QTabWidget()
         self.setCentralWidget(tabs)
@@ -379,6 +389,21 @@ class MainWindow(QMainWindow):
 
         self.txPage = TransactionStatesPage(self.stash.states)
         tabs.addTab(self.txPage, "Transactions")
+
+
+    @Slot(object, object)
+    def on_model_changed(self, new_acqs: List[Acquisition], new_disps:List[Disposition]) -> None:
+
+        if new_acqs != None:
+            self.stash.acquisitions = new_acqs
+        if new_disps!= None:
+            self.stash.dispositions = new_disps
+
+        self.stash.update()  # sorts transactions and builds states
+        self.acqPage.reset_data(self.stash)
+        self.dispPage.reset_data(self.stash)
+        self.txPage.reset_data(self.stash)
+        self.centralWidget().update()
 
     def new_stash(self):
 
@@ -433,19 +458,27 @@ class MainWindow(QMainWindow):
              QMessageBox.critical(self, "Oops", str(ex))
         return stash
 
-    @Slot(object, object)
-    def on_model_changed(self, new_acqs: List[Acquisition], new_disps:List[Disposition]) -> None:
+    def import_stash(self):
+        filename, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select a file to import"
+        )
+        if filename:
+            try:
+                with open(filename, 'r') as f:
+                    jsonData = json.load(f) # a stash
+                    new_data = Stash.from_json_dict(jsonData)
+                    if new_data.asset!= self.stash.asset:
+                        raise ValueError(f"Asset mismatch: found {new_data.asset}. Should be {self.stash.asset}")
+            except Exception as ex:
+                # TODO: handle this with a popup thingy
+                QMessageBox.critical(self, "Oops", str(ex))
+                return
 
-        if new_acqs != None:
-            self.stash.acquisitions = new_acqs
-        if new_disps!= None:
-            self.stash.dispositions = new_disps
-
-        self.stash.update()  # sorts transactions and builds states
-        self.acqPage.reset_data(self.stash.acquisitions)
-        self.dispPage.reset_data(self.stash.dispositions)
-        self.txPage.reset_data(self.stash.states)
-        self.centralWidget().update()
+            self.stash.acquisitions += new_data.acquisitions
+            self.stash.dispositions += new_data.dispositions
+            self.stash.update()
+            self.on_model_changed(self.stash.acquisitions, self.stash.dispositions)
 
     def save_stash(self):
         filename, _ = QFileDialog.getSaveFileName(

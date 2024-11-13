@@ -226,13 +226,10 @@ class Stash:
 
         This should be called inside a try block
         """
-        title = jd.get("title", "")  #TODO This is awkward while we transition from JSON without "title"
-        stash = Stash(jd["asset"], title)
+        stash = Stash(jd["asset"], jd["title"])
         # Sort and filter out any wrong-commodity stuff
-        stash.acquisitions = sorted( [Acquisition.from_json_dict(acq) for acq in jd["acquisitions"]
-                                    if acq.asset== stash.asset], key=lambda a: a.timestamp)
-        stash.dispositions = sorted( [Disposition.from_json_dict(dis) for dis in jd["dispositions"]
-                                    if dis.asset== stash.asset], key=lambda d: d.timestamp)
+        stash.acquisitions = sorted( [Acquisition.from_json_dict(acq) for acq in jd["acquisitions"] ],  key=lambda a: a.timestamp)
+        stash.dispositions = sorted( [Disposition.from_json_dict(dis) for dis in jd["dispositions"]], key=lambda d: d.timestamp)
         return stash
 
     def to_json_dict(self) -> Dict:
@@ -269,7 +266,7 @@ class StatesTableModel(QAbstractTableModel):
         super(StatesTableModel, self).__init__()
         self.states_list = stashStates
 
-    def reset_model(self, stashStates: List[StashState]) -> None:
+    def reset_model(self, asset: str, stashStates: List[StashState]) -> None:
         self.beginResetModel()
         self.states_list = stashStates if stashStates else []
         self.endResetModel()
