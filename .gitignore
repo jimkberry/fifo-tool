@@ -3,8 +3,8 @@
 *$py.class
 
 .pytest_cache/
-.coverage/
 .vscode/
+.coverage
 
 **/.ipynb_checkpoints/
 
