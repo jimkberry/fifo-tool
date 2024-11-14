@@ -26,8 +26,7 @@ class Transaction():
     # DATETIME_FORMAT = "%m/%d/%Y %H:%M:%S %z" # "12/27/2016 14:14:00 +0000"
 
     def __init__(self, timestamp: float, asset: str, asset_amount: float, asset_price: float,
-                  fees: float, reference: str, comment: str = None) -> None:
-
+                  fees: float, reference: str, comment: str, disabled: bool = False) -> None:
         self.timestamp = timestamp # floating-point posix epoch
         self.asset: str = asset
         self.asset_price = asset_price
@@ -35,6 +34,97 @@ class Transaction():
         self.fees = fees
         self.reference = reference
         self.comment = comment
-        #TODO: should there be a constant str ID as well? It would need
-        # to be created solely from the init data.
+        self.disabled = disabled
+        self.update_hash() # hash
 
+
+    def update_hash(self) -> None:
+        self.hash = hash((self.timestamp, self.asset, self.asset_amount, self.asset_price, self.fees)) # try make dups harder to have
+
+# QT View models
+class TxTableModel(QAbstractTableModel):
+    """
+    Parent mode of both the Acqusition and Disposition table model
+    """
+
+    def __init__(self, asset: str, transactions: List[Transaction] = []) -> None:
+        super(TxTableModel, self).__init__()
+        assert asset != None
+        self.asset = asset
+        self.transactionsList = transactions
+        self.edit_buff = None
+        self.row_under_edit: int = -1 # only a single row can be edited at a time
+
+    # virtuals
+    def set_data(self, tx: Transaction, col: int, str_val: str) -> bool:
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def fetch_data(self, tx: Transaction, col: int) -> object:
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def header_labels(self) -> List[str]:
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def button_columns(self) -> List[int]:
+        """return a list of column indices that are buttons (cancel/accept)"""
+        raise NotImplementedError("Subclasses must implement this method")
+
+    # end virtuals
+
+    def reset_model(self, asset: str, transactions: List[Transaction]) -> None:
+        assert asset != None
+        self.asset = asset
+        self.beginResetModel()
+        self.transactionsList = transactions if transactions else []
+        self.endResetModel()
+
+    def edit_row(self, row: int = -1) -> None:
+        if self.row_under_edit == -1:
+            self.row_under_edit = row
+            self.edit_buff = self.transactionsList[row].duplicate()
+        else:
+            prev_edit_row = self.row_under_edit
+            self.cancel_edit()
+            if row != prev_edit_row:
+                self.row_under_edit = row
+
+    def cancel_edit(self) -> None:
+        self.row_under_edit = -1
+        self.edit_buff = None
+
+    def accept_edit(self) -> None:
+        self.transactionsList[self.row_under_edit] = self.edit_buff.duplicate()
+        self.row_under_edit = -1
+        self.edit_buff = None
+
+    # overrides
+    def headerData(self, section: int, orientation: Qt.Orientation, role: int = ...):
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            return self.header_labels()[section]
+
+    def flags(self, index):
+        if index.row() == self.row_under_edit:
+            if index.column() in self.button_columns():
+                return Qt.ItemIsEnabled
+            else:
+                return Qt.ItemIsSelectable|Qt.ItemIsEnabled|Qt.ItemIsEditable
+        else:
+            return Qt.ItemIsSelectable|Qt.ItemIsEnabled
+
+    def data(self, index, role):
+        if role == Qt.DisplayRole:
+            acq = self.edit_buff if self.row_under_edit == index.row() else self.transactionsList[index.row()]
+            return self.fetch_data(acq, index.column())
+        if role == Qt.EditRole and index.row() == self.row_under_edit:
+            return self.fetch_data(self.edit_buff, index.column())
+
+    def setData(self, index, value, role):
+        """This moves edited widget (string) data into the edit_buffer"""
+        if role == Qt.EditRole and index.row() == self.row_under_edit:
+            return self.set_data(self.edit_buff, index.column(), str(value))
+
+    def rowCount(self, index):
+        return len(self.transactionsList)
+
+    def columnCount(self, index):
+        return len(self.header_labels())

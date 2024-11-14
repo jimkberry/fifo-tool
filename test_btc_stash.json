@@ -8,7 +8,8 @@
       "asset_amount": 8.0,
       "asset_price": 100.68,
       "fees": 0,
-      "comment": ""
+      "comment": "",
+      "reference": "Coinbase tx: 0xabcdef"
     },
     {
       "timestamp": 1600200000,
@@ -16,7 +17,8 @@
       "asset_amount": 5.0,
       "asset_price": 105,
       "fees": 0,
-      "comment": ""
+      "comment": "",
+      "reference": "Coinbase tx: 0xdeadbeef"
     }
   ],
   "dispositions": [

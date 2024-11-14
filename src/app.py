@@ -26,7 +26,6 @@ class BorderHighlightItemDelegate(QStyledItemDelegate):
             rect.adjust(0,0,-1,-1)
             painter.drawRect(rect)
 
-
 class AcquisitionsPage(QWidget):
 
     model_changed_sig = Signal(object, object) # params are: acquisitions, dispositions
@@ -116,7 +115,7 @@ class AcquisitionsPage(QWidget):
         edit_row = self.model.row_under_edit
         if edit_row != -1:
             self.model.accept_edit()
-            self.model_changed_sig.emit(self.model.acquisitionsList, None)  # main window catches this, rebuilds stash, and updates views
+            self.model_changed_sig.emit(self.model.transactionsList, None)  # main window catches this, rebuilds stash, and updates views
             self.disable_edit_gui(edit_row)
 
     def disable_edit_gui(self, edit_row: int) -> None:
@@ -128,9 +127,9 @@ class AcquisitionsPage(QWidget):
         self.table.viewport().update()
 
     def add_acquisition(self) -> None:
-        new_acq = Acquisition(datetime.timestamp(datetime.now(timezone.utc)), self.model.asset, 0, 0, 0, "New Acquisition")
-        self.model.acquisitionsList.append(new_acq) # TODO: fix fugliness
-        self.model_changed_sig.emit(self.model.acquisitionsList, None) # main window catches this, rebuilds stash, and updates views
+        new_acq = Acquisition(datetime.timestamp(datetime.now(timezone.utc)), self.model.asset, 0, 0, 0, "", "New Acquisition")
+        self.model.transactionsList.append(new_acq) # TODO: fix fugliness
+        self.model_changed_sig.emit(self.model.transactionsList, None) # main window catches this, rebuilds stash, and updates views
 
     def delete_acquisition(self) -> None:
         sel_model = self.table.selectionModel()
@@ -147,8 +146,8 @@ class AcquisitionsPage(QWidget):
             button = dlg.exec()
             if button == QMessageBox.Yes:
                 del_row = idx_list[0].row()
-                del self.model.acquisitionsList[del_row]
-                self.model_changed_sig.emit(self.model.acquisitionsList,None )
+                del self.model.transactionsList[del_row]
+                self.model_changed_sig.emit(self.model.transactionsList, None)
 
     def import_file(self):
         pass
@@ -266,7 +265,7 @@ class DispositionsPage(QWidget):
         edit_row = self.model.row_under_edit
         if edit_row != -1:
             self.model.accept_edit()
-            self.model_changed_sig.emit(None, self.model.dispositionsList)  # main window catches this, rebuilds stash, and updates views
+            self.model_changed_sig.emit(None, self.model.transactionsList)  # main window catches this, rebuilds stash, and updates views
             self.disable_edit_gui(edit_row)
 
     def disable_edit_gui(self, edit_row: int) -> None:
@@ -279,8 +278,8 @@ class DispositionsPage(QWidget):
 
     def add_disposition(self) -> None:
         new_dis = Disposition(datetime.timestamp(datetime.now(timezone.utc)), self.model.asset, 0, 0, 0, "", "New Disposition")
-        self.model.dispositionsList.append(new_dis) # TODO: fix fugliness
-        self.model_changed_sig.emit(None, self.model.dispositionsList )
+        self.model.transactionsList.append(new_dis) # TODO: fix fugliness
+        self.model_changed_sig.emit(None, self.model.transactionsList )
 
     def delete_disposition(self) -> None:
         sel_model = self.table.selectionModel()
@@ -297,8 +296,8 @@ class DispositionsPage(QWidget):
             button = dlg.exec()
             if button == QMessageBox.Yes:
                 del_row = idx_list[0].row()
-                del self.model.dispositionsList[del_row]
-                self.model_changed_sig.emit(None, self.model.dispositionsList )
+                del self.model.transactionsList[del_row]
+                self.model_changed_sig.emit(None, self.model.transactionsList )
 
     def import_file(self):
         pass
