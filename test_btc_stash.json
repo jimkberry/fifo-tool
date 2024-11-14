@@ -18,7 +18,8 @@
       "asset_price": 105,
       "fees": 0,
       "comment": "",
-      "reference": "Coinbase tx: 0xdeadbeef"
+      "reference": "Coinbase tx: 0xdeadbeef",
+      "disabled": true
     }
   ],
   "dispositions": [

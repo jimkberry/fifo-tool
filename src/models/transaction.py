@@ -78,6 +78,12 @@ class TxTableModel(QAbstractTableModel):
         self.transactionsList = transactions if transactions else []
         self.endResetModel()
 
+    def is_disabled(self, row: int) -> bool:
+        return self.transactionsList[row].disabled
+
+    def toggle_disabled(self, row: int) -> None:
+         self.transactionsList[row].disabled = not self.transactionsList[row].disabled
+
     def edit_row(self, row: int = -1) -> None:
         if self.row_under_edit == -1:
             self.row_under_edit = row

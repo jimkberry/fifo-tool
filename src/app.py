@@ -20,11 +20,16 @@ class BorderHighlightItemDelegate(QStyledItemDelegate):
 
     def paint(self, painter, option, index):
         super().paint(painter, option, index)
+        if index.model().is_disabled(index.row()): # do disable first so selection rect is on top
+            rect = QRect(option.rect)
+            rect.adjust(0,0,-1,-1)
+            painter.fillRect(rect,QColor(0, 0, 0, 128))
         if index.row() == index.model().row_under_edit:
             painter.setPen(QColor(255, 255, 128, 128))
             rect = QRect(option.rect)
             rect.adjust(0,0,-1,-1)
             painter.drawRect(rect)
+
 
 class AcquisitionsPage(QWidget):
 
@@ -50,8 +55,8 @@ class AcquisitionsPage(QWidget):
         edit_btn.clicked.connect(self.edit_acquisition)
         del_btn = QPushButton("Delete")
         del_btn.clicked.connect(self.delete_acquisition)
-        imp_btn = QPushButton("Import")
-        imp_btn.clicked.connect(self.import_file)
+        imp_btn = QPushButton("Toggle Disabled")
+        imp_btn.clicked.connect(self.toggle_acquisition)
 
         # layout
         btnsLayout = QHBoxLayout()
@@ -149,30 +154,15 @@ class AcquisitionsPage(QWidget):
                 del self.model.transactionsList[del_row]
                 self.model_changed_sig.emit(self.model.transactionsList, None)
 
-    def import_file(self):
-        pass
-
-        # filename, _ = QFileDialog.getOpenFileName(
-        #     self,
-        #     "Select a File"
-        # )
-        # if filename:
-        #     res = []  # This would be your JSON data.
-        #     try:
-        #         with open(filename, 'r') as f:
-        #             jsonData = json.load(f) # a List of Dicts
-        #         acqs = jsonData['acquisitions']
-        #         res = sorted( [Acquisition.from_json_dict(acq) for acq in acqs],  key=lambda acq: acq.timestamp)
-        #     except Exception as ex:
-        #         # TODO: handle this with a popup thingy
-        #         QMessageBox.critical(self, "Oops", str(ex))
-        #     self.model.acquisitionsList = res
-        #     self.model.modelReset.emit()
-        #     self.table.resizeColumnsToContents()
-
-    # def save(self):
-    #     with open('BTC_acqs.json', 'w') as f:
-    #         data = json.dump(self.model.todos, f)
+    def toggle_acquisition(self):
+        sel_model = self.table.selectionModel()
+        idx_list =  sel_model.selectedRows()
+        if not idx_list:
+            QMessageBox.warning(self,"Toggle Disabled","No Acquisition row selected" )
+            return
+        del_row = idx_list[0].row()
+        self.model.toggle_disabled(del_row)
+        self.model_changed_sig.emit(self.model.transactionsList, None)
 
 
 class DispositionsPage(QWidget):
@@ -199,8 +189,8 @@ class DispositionsPage(QWidget):
         edit_btn.clicked.connect(self.edit_disposition)
         del_btn = QPushButton("Delete")
         del_btn.clicked.connect(self.delete_disposition)
-        imp_btn = QPushButton("Import")
-        imp_btn.clicked.connect(self.import_file)
+        imp_btn = QPushButton("Toggle Disabled")
+        imp_btn.clicked.connect(self.toggle_disposition)
 
         # layout
         btnsLayout = QHBoxLayout()
@@ -299,26 +289,15 @@ class DispositionsPage(QWidget):
                 del self.model.transactionsList[del_row]
                 self.model_changed_sig.emit(None, self.model.transactionsList )
 
-    def import_file(self):
-        pass
-
-        # filename, _ = QFileDialog.getOpenFileName(
-        #     self,
-        #     "Select a File"
-        # )
-        # if filename:
-        #     res = []  # This would be your JSON data.
-        #     try:
-        #         with open(filename, 'r') as f:
-        #             jsonData = json.load(f) # a List of Dicts
-        #             disps = jsonData['dispositions']
-        #         res = sorted( [Disposition.from_json_dict(dis) for dis in disps],  key=lambda dis: dis.timestamp)
-        #     except Exception as ex:
-        #         # TODO: handle this with a popup thingy
-        #         QMessageBox.critical(self, "Oops", str(ex))
-        #     self.model.dispositionsList += res
-        #     self.model.modelReset.emit()
-        #     self.table.resizeColumnsToContents()
+    def toggle_disposition(self):
+        sel_model = self.table.selectionModel()
+        idx_list =  sel_model.selectedRows()
+        if not idx_list:
+            QMessageBox.warning(self,"Toggle Disabled","No Disposition row selected" )
+            return
+        del_row = idx_list[0].row()
+        self.model.toggle_disabled(del_row)
+        self.model_changed_sig.emit(None, self.model.transactionsList)
 
 
 class TransactionStatesPage(QWidget):

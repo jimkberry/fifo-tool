@@ -200,7 +200,7 @@ class Stash:
         self.generate_states()
 
     def generate_states(self):
-        activities: List[Any] =  [act for act in (self.acquisitions + self.dispositions)]
+        activities: List[Any] =  [act for act in (self.acquisitions + self.dispositions) if not act.disabled]
         sortedActivities: List[Any] =  sorted(activities,  key=lambda a: a.timestamp)
 
         state: StashState = StashState()
