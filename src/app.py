@@ -39,10 +39,11 @@ class AcquisitionsPage(QWidget):
         self.table.setModel(self.model)
         self.table.showGrid()
         self.table.setGridStyle(Qt.SolidLine)
-        self.table.resizeColumnsToContents()
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setItemDelegate(BorderHighlightItemDelegate())
+        self.table.resizeColumnsToContents()
+        self.table.resizeRowsToContents()
 
         add_btn = QPushButton("Add")
         add_btn.clicked.connect(self.add_acquisition)
@@ -69,6 +70,7 @@ class AcquisitionsPage(QWidget):
     def reset_data(self, stash: Stash) -> None:
         self.model.reset_model(stash.asset, stash.acquisitions)
         self.table.resizeColumnsToContents()
+        self.table.resizeRowsToContents()
         self.table.viewport().update()
 
     def edit_acquisition(self) -> None:
@@ -186,10 +188,11 @@ class DispositionsPage(QWidget):
         self.table.setModel(self.model)
         self.table.showGrid()
         self.table.setGridStyle(Qt.SolidLine)
-        self.table.resizeColumnsToContents()
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setItemDelegate(BorderHighlightItemDelegate())
+        self.table.resizeColumnsToContents()
+        self.table.resizeRowsToContents()
 
         add_btn = QPushButton("Add")
         add_btn.clicked.connect(self.add_disposition)
@@ -216,6 +219,7 @@ class DispositionsPage(QWidget):
     def reset_data(self, stash: Stash) -> None:
         self.model.reset_model(stash.asset, stash.dispositions)
         self.table.resizeColumnsToContents()
+        self.table.resizeRowsToContents()
         self.table.viewport().update()
 
 
@@ -344,6 +348,7 @@ class TransactionStatesPage(QWidget):
     def reset_data(self, stash: Stash) -> None:
         self.model.reset_model(stash.asset, stash.states)
         self.table.resizeColumnsToContents()
+        self.table.resizeRowsToContents()
         self.table.viewport().update()
 
 

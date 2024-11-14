@@ -287,8 +287,9 @@ class StatesTableModel(QAbstractTableModel):
         if col == StatesTableModel.BALANCE_IDX:
             return f"{state.balance:.8f}"
         if col == StatesTableModel.LOTS_AFFECTED_IDX:
-            return "\n".join(f"{l.lot_num}: {l.update_amount_delta:+.8f}" for l in state.lots_affected)
-            #return ", ".join(f"{idx}: {l.update_amount_delta:.8f}" for (idx,l) in state.lots_affected)
+            strs = [f"{l.lot_num}: {l.update_amount_delta:+.8f}" for l in state.lots_affected]
+            return "\n".join(strs)
+            #return ", ".join(strs)
         if col == StatesTableModel.REFERENCE_IDX:
             return state.reference
         if col == StatesTableModel.COMMENT_IDX:
