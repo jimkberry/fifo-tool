@@ -4,9 +4,8 @@
 
 .pytest_cache/
 .vscode/
-.coverage
 
 **/.ipynb_checkpoints/
 
 **/local_data/
-
+.coverage
