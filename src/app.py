@@ -248,7 +248,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         #self.stash = self.load_stash('new_stash.json')
-        self.stash = Stash('BTC','ya ya ya')
+        self.stash = Stash('BTC','Default Stash')
 
         self.resize(1024, 768)
         self.setWindowTitle(f'{self.stash.asset}: {self.stash.title}')
