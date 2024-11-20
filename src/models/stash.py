@@ -12,6 +12,8 @@ class LotState:
     """State of stuff acquired at the same timne
     """
 
+    ONE_YEAR_SECS = 24 * 60 * 60 * 365.0
+
     def __init__(self, lot_num: int):
         # constant across activities
         self.lot_num = lot_num
@@ -24,6 +26,14 @@ class LotState:
         self.update_asset_price = 0
         self.balance: float = 0
 
+    # computed stuff
+    @property
+    def cap_gains(self) -> float:
+        return -(self.update_asset_price - self.basis_price) * self.update_amount_delta # delta is < 0 for a disp
+
+    @property
+    def is_long_term(self) -> bool:
+        return (self.update_timestamp - self.initial_timestamp) > LotState.ONE_YEAR_SECS
 
     @classmethod
     def copy(cls, src: "LotState") -> "LotState":
@@ -123,6 +133,10 @@ class StashState:
         return self.activity.asset_amount
 
     @property
+    def value(self) -> float:
+        return self.activity.value
+
+    @property
     def fees(self) -> float:
         return self.activity.fees
 
@@ -143,6 +157,18 @@ class StashState:
     @property
     def lots_affected(self) -> List[LotState]:
         return [l for l in self.lots if l.update_amount_delta != 0]
+
+    @property
+    def cap_gains(self) -> float:
+        return sum(l.cap_gains for l in self.lots_affected)
+
+    @property
+    def long_short_term(self) -> str:
+        """ returns L is all lots are long-term, S if none are, and L/S if there's a mix  """
+        return (
+            "L" if all(l.is_long_term for l in self.lots_affected)
+            else "S" if not any(l.is_long_term for l in self.lots_affected)
+            else "L/S")
 
     def current_lot(self) -> LotState:
         return next((l for l in self.lots if l.balance > 0), None)
@@ -253,14 +279,16 @@ class StatesTableModel(QAbstractTableModel):
     TX_TYPE_IDX = 1 # tx/acq
     ASSET_AMOUNT_IDX = 2 # tx/acq
     ASSET_PRICE_IDX = 3 # tx/acq
-    FEES_IDX = 4 # tx/acq
-    BALANCE_IDX = 5 # state
-    LOTS_AFFECTED_IDX = 6 # state
-    REFERENCE_IDX = 7 # disp
-    COMMENT_IDX = 8 # tx/acq
-    COLUMN_COUNT = 9
+    VALUE_IDX = 4 # tx/acq
+    FEES_IDX = 5 # tx/acq
+    BALANCE_IDX = 6 # state
+    LOTS_AFFECTED_IDX = 7 # state
+    CAP_GAINS_IDX = 8 # state
+    REFERENCE_IDX = 9 # disp
+    COMMENT_IDX = 10 # tx/acq
+    COLUMN_COUNT = 11
 
-    HEADER_LABELS = ["Date", "Type", "Amount", "Price", "Fees", "Balance", "Lots Affected", "Reference", "Comment"]
+    HEADER_LABELS = ["Date", "Type", "Amount", "Price", "Value", "Fees", "Balance", "Lots Affected", "Cap Gains", "Reference", "Comment"]
 
     def __init__(self, stashStates: List[StashState] = []) -> None:
         super(StatesTableModel, self).__init__()
@@ -281,14 +309,18 @@ class StatesTableModel(QAbstractTableModel):
         if col == StatesTableModel.ASSET_AMOUNT_IDX:
             return f"{state.asset_amount:.8f}"
         if col == StatesTableModel.ASSET_PRICE_IDX:
-            return f"{state.asset_price:.8f}"
+            return f"${state.asset_price:.2f}"
+        if col == StatesTableModel.VALUE_IDX:
+            return f"${state.value:.2f}"
         if col == StatesTableModel.FEES_IDX:
-            return f"{state.fees:.8f}"
+            return f"{state.fees:.2f}"
         if col == StatesTableModel.BALANCE_IDX:
             return f"{state.balance:.8f}"
         if col == StatesTableModel.LOTS_AFFECTED_IDX:
             strs = [f"{l.lot_num}: {l.update_amount_delta:+.8f}" for l in state.lots_affected]
             return "\n".join(strs)
+        if col == StatesTableModel.CAP_GAINS_IDX:
+            return f"{state.long_short_term}: ${state.cap_gains:.2f}" if isinstance(state.activity, Disposition) else ""
             #return ", ".join(strs)
         if col == StatesTableModel.REFERENCE_IDX:
             return state.reference

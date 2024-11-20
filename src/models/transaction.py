@@ -37,6 +37,9 @@ class Transaction():
         self.disabled = disabled
         self.update_hash() # hash
 
+    @property
+    def value(self) -> float:
+        return self.asset_amount * self.asset_price
 
     def update_hash(self) -> None:
         self.hash = hash((self.timestamp, self.asset, self.asset_amount, self.asset_price, self.fees)) # try make dups harder to have

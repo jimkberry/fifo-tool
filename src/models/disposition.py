@@ -87,14 +87,15 @@ class DisTableModel(TxTableModel):
     DIS_TIMESTAMP_IDX = 0
     DIS_AMOUNT_IDX = 1
     DIS_PRICE_IDX = 2
-    DIS_FEES_IDX = 3
-    DIS_REFERENCE_IDX = 4
-    DIS_COMMENT_IDX = 5
-    DIS_CANCEL_BTN_IDX = 6
-    DIS_ACCEPT_BTN_IDX = 7
-    DIS_COLUMN_COUNT = 8
+    DIS_VALUE_IDX = 3
+    DIS_FEES_IDX = 4
+    DIS_REFERENCE_IDX = 5
+    DIS_COMMENT_IDX = 6
+    DIS_CANCEL_BTN_IDX = 7
+    DIS_ACCEPT_BTN_IDX = 8
+    DIS_COLUMN_COUNT = 9
 
-    HEADER_LABELS = ["Date", "Amount", "Price", "Fees", "Reference", "Comment", "", ""]
+    HEADER_LABELS = ["Date", "Amount", "Price", "Value", "Fees", "Reference", "Comment", "", ""]
 
     def __init__(self, asset: str, dispositions: List[Disposition] = []):
          super(DisTableModel, self).__init__(asset, dispositions)
@@ -116,6 +117,7 @@ class DisTableModel(TxTableModel):
                 dis.asset_amount = float(str_val)
             if col == DisTableModel.DIS_PRICE_IDX:
                 dis.asset_price = float(str_val)
+            # if col == DisTableModel.DIS_PRICE_IDX: - "value" is a computed property
             if col == DisTableModel.DIS_FEES_IDX:
                 dis.fees = float(str_val)
             if col == DisTableModel.DIS_REFERENCE_IDX:
@@ -133,9 +135,11 @@ class DisTableModel(TxTableModel):
         if col == DisTableModel.DIS_AMOUNT_IDX:
             return f"{dis.asset_amount:.8f}"
         if col == DisTableModel.DIS_PRICE_IDX:
-            return f"{dis.asset_price:.8f}"
+            return f"${dis.asset_price:.2f}"
+        if col == DisTableModel.DIS_VALUE_IDX:
+            return f"${dis.value:.2f}"
         if col == DisTableModel.DIS_FEES_IDX:
-            return f"{dis.fees:.8f}"
+            return f"{dis.fees:.2f}"
         if col == DisTableModel.DIS_REFERENCE_IDX:
             return dis.reference
         if col == DisTableModel.DIS_COMMENT_IDX:
