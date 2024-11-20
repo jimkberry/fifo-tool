@@ -68,11 +68,19 @@ class TxTableModel(QAbstractTableModel):
     def header_labels(self) -> List[str]:
         raise NotImplementedError("Subclasses must implement this method")
 
+    def editable_columns(self) -> List[int]:
+        """return a list of indices for  columns that are editable"""
+        raise NotImplementedError("Subclasses must implement this method")
+
     def button_columns(self) -> List[int]:
         """return a list of column indices that are buttons (cancel/accept)"""
         raise NotImplementedError("Subclasses must implement this method")
 
     # end virtuals
+
+    def money_str_to_float(self, str_val: str) -> float:
+        """String may or may not begin with a $"""
+        return float(str_val.replace('$', ''))
 
     def reset_model(self, asset: str, transactions: List[Transaction]) -> None:
         assert asset != None
@@ -113,10 +121,11 @@ class TxTableModel(QAbstractTableModel):
 
     def flags(self, index):
         if index.row() == self.row_under_edit:
-            if index.column() in self.button_columns():
-                return Qt.ItemIsEnabled
-            else:
+            if index.column() in self.editable_columns():
                 return Qt.ItemIsSelectable|Qt.ItemIsEnabled|Qt.ItemIsEditable
+            else:
+                return Qt.ItemIsEnabled # buttons and computed stuff
+
         else:
             return Qt.ItemIsSelectable|Qt.ItemIsEnabled
 

@@ -98,8 +98,14 @@ class AcqTableModel(TxTableModel):
     def header_labels(self) -> List[str]:
         return AcqTableModel.HEADER_LABELS
 
+    def editable_columns(self) -> List[int]:
+        return [AcqTableModel.ACQ_TIMESTAMP_IDX, AcqTableModel.ACQ_ASSET_AMOUNT_IDX, AcqTableModel.ACQ_ASSET_PRICE_IDX,
+                AcqTableModel.ACQ_REF_IDX, AcqTableModel.ACQ_COMMENT_IDX]
+
     def button_columns(self) -> List[int]:
-        """return a list of column indices that are buttons (cancel/accept)"""
+        """return a list of column indices that are buttons (cancel/accept)
+            [ cancel_btn_idx, accept_btn_idx ]
+        """
         return [AcqTableModel.ACQ_CANCEL_BTN_IDX, AcqTableModel.ACQ_ACCEPT_BTN_IDX]
 
     def set_data(self, acq: Acquisition, col: int, str_val: str) -> bool:
@@ -112,9 +118,9 @@ class AcqTableModel(TxTableModel):
                 dt = dateparser.parse(str_val, settings={'RETURN_AS_TIMEZONE_AWARE': True})
                 acq.timestamp = dt.timestamp()
             if col == AcqTableModel.ACQ_ASSET_AMOUNT_IDX:
-                acq.asset_amount = float(str_val)
+                acq.asset_amount = self.money_str_to_float(str_val)
             if col == AcqTableModel.ACQ_ASSET_PRICE_IDX:
-                acq.asset_price = float(str_val)
+                acq.asset_price = self.money_str_to_float(str_val)
             # col == AcqTableModel.ACQ_VALUE_IDX - "value" is a computed property
             if col == AcqTableModel.ACQ_REF_IDX:
                 acq.reference = str_val

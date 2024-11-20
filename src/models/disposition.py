@@ -103,6 +103,10 @@ class DisTableModel(TxTableModel):
     def header_labels(self) -> List[str]:
         return DisTableModel.HEADER_LABELS
 
+    def editable_columns(self) -> List[int]:
+        return [DisTableModel.DIS_TIMESTAMP_IDX, DisTableModel.DIS_AMOUNT_IDX, DisTableModel.DIS_PRICE_IDX,
+                DisTableModel.DIS_FEES_IDX, DisTableModel.DIS_REFERENCE_IDX, DisTableModel.DIS_COMMENT_IDX]
+
     def button_columns(self) -> List[int]:
         """return a list of column indices that are buttons (cancel/accept)"""
         return [DisTableModel.DIS_CANCEL_BTN_IDX, DisTableModel.DIS_ACCEPT_BTN_IDX]
@@ -114,12 +118,12 @@ class DisTableModel(TxTableModel):
                 dt = dateparser.parse(str_val, settings={'RETURN_AS_TIMEZONE_AWARE': True})
                 dis.timestamp = dt.timestamp()
             if col == DisTableModel.DIS_AMOUNT_IDX:
-                dis.asset_amount = float(str_val)
+                dis.asset_amount = self.money_str_to_float(str_val)
             if col == DisTableModel.DIS_PRICE_IDX:
-                dis.asset_price = float(str_val)
+                dis.asset_price = self.money_str_to_float(str_val)
             # if col == DisTableModel.DIS_PRICE_IDX: - "value" is a computed property
             if col == DisTableModel.DIS_FEES_IDX:
-                dis.fees = float(str_val)
+                dis.fees = self.money_str_to_float(str_val)
             if col == DisTableModel.DIS_REFERENCE_IDX:
                 dis.reference = str_val
             if col == DisTableModel.DIS_COMMENT_IDX:
@@ -139,7 +143,7 @@ class DisTableModel(TxTableModel):
         if col == DisTableModel.DIS_VALUE_IDX:
             return f"${dis.value:.2f}"
         if col == DisTableModel.DIS_FEES_IDX:
-            return f"{dis.fees:.2f}"
+            return f"${dis.fees:.2f}"
         if col == DisTableModel.DIS_REFERENCE_IDX:
             return dis.reference
         if col == DisTableModel.DIS_COMMENT_IDX:
