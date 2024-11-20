@@ -10,6 +10,7 @@ from PySide6.QtWidgets import ( QApplication, QMainWindow, QPushButton,QLineEdit
 from PySide6.QtGui import QAction, QPainter, QColor, Qt
 from PySide6.QtCore import QRect, Signal, Slot
 
+from models.transaction import Transaction, TxTableModel
 from models.acquisition import Acquisition, AcqTableModel
 from models.disposition import Disposition, DisTableModel
 from models.stash import Stash, StatesTableModel, StashState
@@ -30,274 +31,186 @@ class BorderHighlightItemDelegate(QStyledItemDelegate):
             rect.adjust(0,0,-1,-1)
             painter.drawRect(rect)
 
+class TxPage(QWidget):
 
-class AcquisitionsPage(QWidget):
+    model_changed_sig = Signal(object) # param is new transactionList
 
-    model_changed_sig = Signal(object, object) # params are: acquisitions, dispositions
+    # virtuals for subclass
+
+    def table_model(self) -> TxTableModel:
+        """Table Model Class"""
+        raise NotImplementedError
+
+    def new_transaction(self) -> Transaction:
+        """Create new Acq/Disp instance"""
+        raise NotImplementedError
+
+    # end virtuals
+
+    def __init__(self, asset: str,  transactions: List[Transaction]) -> None:
+        super().__init__()
+        self.table = QTableView()
+        self.model = self.table_model()(asset, transactions)
+        self.table.setModel(self.model)
+        self.table.showGrid()
+        self.table.setGridStyle(Qt.SolidLine)
+        self.table.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setItemDelegate(BorderHighlightItemDelegate())
+        self.table.resizeColumnsToContents()
+        self.table.resizeRowsToContents()
+
+        add_btn = QPushButton("Add")
+        add_btn.clicked.connect(self.add_row)
+        edit_btn = QPushButton("Edit")
+        edit_btn.clicked.connect(self.edit_row)
+        del_btn = QPushButton("Delete")
+        del_btn.clicked.connect(self.delete_row)
+        imp_btn = QPushButton("Toggle Disabled")
+        imp_btn.clicked.connect(self.toggle_transaction)
+
+        # layout
+        btnsLayout = QHBoxLayout()
+        btnsLayout.addWidget(add_btn)
+        btnsLayout.addWidget(edit_btn)
+        btnsLayout.addWidget(del_btn)
+        btnsLayout.addWidget(imp_btn)
+
+        pageLayout = QVBoxLayout()
+        pageLayout.addWidget(self.table)
+        pageLayout.addLayout(btnsLayout)
+
+        self.setLayout(pageLayout)
+
+    def reset_data(self, asset: str, data: List[Transaction]) -> None:
+        self.model.reset_model(asset, data)
+        self.table.resizeColumnsToContents()
+        self.table.resizeRowsToContents()
+        self.table.viewport().update()
+
+    def edit_row(self) -> None:
+        sel_model = self.table.selectionModel()
+        idx_list =  sel_model.selectedRows()
+        if not idx_list:
+            button = QMessageBox.warning(self,"Edit","No row selected" )
+            return
+
+        prev_edit_row = self.model.row_under_edit
+        if prev_edit_row != -1:
+            # cancel the current edit
+            self.cancel_edit()
+            if prev_edit_row == idx_list[0].row():
+                return # edit was pressed only to cancel the current edit
+
+        self.model.edit_row(idx_list[0].row())
+
+        # TODO: this btn/widget stuff oughta be a func
+        cancel_edit_btn = QPushButton(
+            icon = self.style().standardIcon(QStyle.SP_DialogCancelButton),
+            parent=self)
+        cancel_edit_btn.clicked.connect(self.cancel_edit)
+        accept_edit_btn = QPushButton(
+            icon = self.style().standardIcon(QStyle.SP_DialogOkButton),
+            parent=self)
+        accept_edit_btn.clicked.connect(self.accept_edit)
+        self.table.setIndexWidget(
+            self.model.index(idx_list[0].row(), self.model.button_columns()[0]), # TODO: add [cancel|accept]_btn_col() to model
+            cancel_edit_btn)
+        self.table.setIndexWidget(
+            self.model.index(idx_list[0].row(), self.model.button_columns()[1]),
+            accept_edit_btn)
+        self.table.viewport().update()
+
+    def cancel_edit(self) -> None:
+        edit_row = self.model.row_under_edit
+        if edit_row != -1:
+            self.model.cancel_edit()
+            self.disable_edit_gui(edit_row)
+
+    def accept_edit(self) -> None:
+        edit_row = self.model.row_under_edit
+        if edit_row != -1:
+            self.model.accept_edit()
+            # TODO: figure this one out
+            self.model_changed_sig.emit(self.model.transactionsList)  # main window catches this, rebuilds stash, and updates views
+            self.disable_edit_gui(edit_row)
+
+    def disable_edit_gui(self, edit_row: int) -> None:
+        ''' just removes the buttons and updates the view '''
+        self.table.setIndexWidget(
+            self.model.index(edit_row, self.model.button_columns()[0]), None)
+        self.table.setIndexWidget(
+            self.model.index(edit_row,self.model.button_columns()[1]), None)
+        self.table.viewport().update()
+
+    def add_row(self) -> None:
+        new_acq = self.new_transaction() # Acquisition(datetime.timestamp(datetime.now(timezone.utc)), self.model.asset, 0, 0, 0, "", "New Acquisition")
+        self.model.transactionsList.append(new_acq) # TODO: fix fugliness
+        self.model_changed_sig.emit(self.model.transactionsList) # main window catches this, rebuilds stash, and updates views
+
+    def delete_row(self) -> None:
+        sel_model = self.table.selectionModel()
+        idx_list =  sel_model.selectedRows()
+        if not idx_list:
+            button = QMessageBox.warning(self,"Delete Row","No row selected" )
+            return
+        else:
+            dlg = QMessageBox(self)
+            dlg.setWindowTitle("Confirm Delete ")
+            dlg.setText("Delete the selected transaction?")
+            dlg.setStandardButtons(QMessageBox.Cancel | QMessageBox.Yes )
+            dlg.setIcon(QMessageBox.Question)
+            button = dlg.exec()
+            if button == QMessageBox.Yes:
+                del_row = idx_list[0].row()
+                del self.model.transactionsList[del_row]
+                self.model_changed_sig.emit(self.model.transactionsList)
+
+    def toggle_transaction(self):
+        sel_model = self.table.selectionModel()
+        idx_list =  sel_model.selectedRows()
+        if not idx_list:
+            QMessageBox.warning(self,"Toggle Enable/Disabled","No transaction selected" )
+            return
+        del_row = idx_list[0].row()
+        self.model.toggle_disabled(del_row)
+        self.model_changed_sig.emit(self.model.transactionsList)
+
+
+class AcquisitionsPage(TxPage):
 
     def __init__(self, asset: str,  acquisitions: List[Acquisition]) -> None:
-        super().__init__()
+        super().__init__(asset, acquisitions)
 
-        self.table = QTableView()
-        self.model = AcqTableModel(asset, acquisitions)
-        self.table.setModel(self.model)
-        self.table.showGrid()
-        self.table.setGridStyle(Qt.SolidLine)
-        self.table.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.table.setItemDelegate(BorderHighlightItemDelegate())
-        self.table.resizeColumnsToContents()
-        self.table.resizeRowsToContents()
+    def stash_tx_list(self) -> List[Transaction]:
+        """Data list in the stash"""
+        return self.stash.acquisitions
 
-        add_btn = QPushButton("Add")
-        add_btn.clicked.connect(self.add_acquisition)
-        edit_btn = QPushButton("Edit")
-        edit_btn.clicked.connect(self.edit_acquisition)
-        del_btn = QPushButton("Delete")
-        del_btn.clicked.connect(self.delete_acquisition)
-        imp_btn = QPushButton("Toggle Disabled")
-        imp_btn.clicked.connect(self.toggle_acquisition)
+    def table_model(self) -> TxTableModel:
+        """Table Model Class"""
+        return AcqTableModel
 
-        # layout
-        btnsLayout = QHBoxLayout()
-        btnsLayout.addWidget(add_btn)
-        btnsLayout.addWidget(edit_btn)
-        btnsLayout.addWidget(del_btn)
-        btnsLayout.addWidget(imp_btn)
-
-        pageLayout = QVBoxLayout()
-        pageLayout.addWidget(self.table)
-        pageLayout.addLayout(btnsLayout)
-
-        self.setLayout(pageLayout)
-
-    def reset_data(self, stash: Stash) -> None:
-        self.model.reset_model(stash.asset, stash.acquisitions)
-        self.table.resizeColumnsToContents()
-        self.table.resizeRowsToContents()
-        self.table.viewport().update()
-
-    def edit_acquisition(self) -> None:
-        sel_model = self.table.selectionModel()
-        idx_list =  sel_model.selectedRows()
-        if not idx_list:
-            button = QMessageBox.warning(self,"Edit","No Acquisition row selected" )
-            return
-
-        prev_edit_row = self.model.row_under_edit
-        if prev_edit_row != -1:
-            # cancel the current edit
-            self.cancel_edit()
-            if prev_edit_row == idx_list[0].row():
-                return # edit was pressed only to cancel the current edit
-
-        self.model.edit_row(idx_list[0].row())
-
-        # TODO: this btn/widget stuff oughta be a func
-        cancel_edit_btn = QPushButton(
-            icon = self.style().standardIcon(QStyle.SP_DialogCancelButton),
-            parent=self)
-        cancel_edit_btn.clicked.connect(self.cancel_edit)
-        accept_edit_btn = QPushButton(
-            icon = self.style().standardIcon(QStyle.SP_DialogOkButton),
-            parent=self)
-        accept_edit_btn.clicked.connect(self.accept_edit)
-        self.table.setIndexWidget(
-            self.model.index(idx_list[0].row(), AcqTableModel.ACQ_CANCEL_BTN_IDX),
-            cancel_edit_btn)
-        self.table.setIndexWidget(
-            self.model.index(idx_list[0].row(), AcqTableModel.ACQ_ACCEPT_BTN_IDX),
-            accept_edit_btn)
-        self.table.viewport().update()
-
-    def cancel_edit(self) -> None:
-        edit_row = self.model.row_under_edit
-        if edit_row != -1:
-            self.model.cancel_edit()
-            self.disable_edit_gui(edit_row)
-
-    def accept_edit(self) -> None:
-        edit_row = self.model.row_under_edit
-        if edit_row != -1:
-            self.model.accept_edit()
-            self.model_changed_sig.emit(self.model.transactionsList, None)  # main window catches this, rebuilds stash, and updates views
-            self.disable_edit_gui(edit_row)
-
-    def disable_edit_gui(self, edit_row: int) -> None:
-        ''' just removes the buttons and updates the view '''
-        self.table.setIndexWidget(
-            self.model.index(edit_row, AcqTableModel.ACQ_CANCEL_BTN_IDX), None)
-        self.table.setIndexWidget(
-            self.model.index(edit_row,AcqTableModel.ACQ_ACCEPT_BTN_IDX), None)
-        self.table.viewport().update()
-
-    def add_acquisition(self) -> None:
-        new_acq = Acquisition(datetime.timestamp(datetime.now(timezone.utc)), self.model.asset, 0, 0, 0, "", "New Acquisition")
-        self.model.transactionsList.append(new_acq) # TODO: fix fugliness
-        self.model_changed_sig.emit(self.model.transactionsList, None) # main window catches this, rebuilds stash, and updates views
-
-    def delete_acquisition(self) -> None:
-        sel_model = self.table.selectionModel()
-        idx_list =  sel_model.selectedRows()
-        if not idx_list:
-            button = QMessageBox.warning(self,"Delete Acquisition","No Acquisition row selected" )
-            return
-        else:
-            dlg = QMessageBox(self)
-            dlg.setWindowTitle("Confirm Delete ")
-            dlg.setText("Delete the selected Acquisition?")
-            dlg.setStandardButtons(QMessageBox.Cancel | QMessageBox.Yes )
-            dlg.setIcon(QMessageBox.Question)
-            button = dlg.exec()
-            if button == QMessageBox.Yes:
-                del_row = idx_list[0].row()
-                del self.model.transactionsList[del_row]
-                self.model_changed_sig.emit(self.model.transactionsList, None)
-
-    def toggle_acquisition(self):
-        sel_model = self.table.selectionModel()
-        idx_list =  sel_model.selectedRows()
-        if not idx_list:
-            QMessageBox.warning(self,"Toggle Disabled","No Acquisition row selected" )
-            return
-        del_row = idx_list[0].row()
-        self.model.toggle_disabled(del_row)
-        self.model_changed_sig.emit(self.model.transactionsList, None)
+    def new_transaction(self) -> Transaction:
+        """Create new Acq/Disp instance"""
+        return Acquisition(datetime.timestamp(datetime.now(timezone.utc)), self.model.asset, 0, 0, 0, "", "New Acquisition")
 
 
-class DispositionsPage(QWidget):
+class DispositionsPage(TxPage):
 
-    model_changed_sig = Signal(object, object) # params are: acquisitions, dispositions
+    def __init__(self, asset: str,  dispositions: List[Disposition]) -> None:
+        super().__init__(asset, dispositions)
 
-    def __init__(self, asset: str, dispositions: List[Disposition]) -> None:
-        super().__init__()
+    def stash_tx_list(self) -> List[Transaction]:
+        """Data list in the stash"""
+        return self.stash.dispositions
 
-        self.table = QTableView()
-        self.model = DisTableModel(asset, dispositions)
-        self.table.setModel(self.model)
-        self.table.showGrid()
-        self.table.setGridStyle(Qt.SolidLine)
-        self.table.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.table.setItemDelegate(BorderHighlightItemDelegate())
-        self.table.resizeColumnsToContents()
-        self.table.resizeRowsToContents()
+    def table_model(self) -> TxTableModel:
+        """Table Model Class"""
+        return DisTableModel
 
-        add_btn = QPushButton("Add")
-        add_btn.clicked.connect(self.add_disposition)
-        edit_btn = QPushButton("Edit")
-        edit_btn.clicked.connect(self.edit_disposition)
-        del_btn = QPushButton("Delete")
-        del_btn.clicked.connect(self.delete_disposition)
-        imp_btn = QPushButton("Toggle Disabled")
-        imp_btn.clicked.connect(self.toggle_disposition)
-
-        # layout
-        btnsLayout = QHBoxLayout()
-        btnsLayout.addWidget(add_btn)
-        btnsLayout.addWidget(edit_btn)
-        btnsLayout.addWidget(del_btn)
-        btnsLayout.addWidget(imp_btn)
-
-        pageLayout = QVBoxLayout()
-        pageLayout.addWidget(self.table)
-        pageLayout.addLayout(btnsLayout)
-
-        self.setLayout(pageLayout)
-
-    def reset_data(self, stash: Stash) -> None:
-        self.model.reset_model(stash.asset, stash.dispositions)
-        self.table.resizeColumnsToContents()
-        self.table.resizeRowsToContents()
-        self.table.viewport().update()
-
-
-    def edit_disposition(self) -> None:
-        sel_model = self.table.selectionModel()
-        idx_list =  sel_model.selectedRows()
-        if not idx_list:
-            button = QMessageBox.warning(self,"Edit","No Disposition row selected" )
-            return
-
-        prev_edit_row = self.model.row_under_edit
-        if prev_edit_row != -1:
-            # cancel the current edit
-            self.cancel_edit()
-            if prev_edit_row == idx_list[0].row():
-                return # edit was pressed only to cancel the current edit
-
-        self.model.edit_row(idx_list[0].row())
-
-        # TODO: this btn/widget stuff oughta be a func
-        cancel_edit_btn = QPushButton(
-            icon = self.style().standardIcon(QStyle.SP_DialogCancelButton),
-            parent=self)
-        cancel_edit_btn.clicked.connect(self.cancel_edit)
-        accept_edit_btn = QPushButton(
-            icon = self.style().standardIcon(QStyle.SP_DialogOkButton),
-            parent=self)
-        accept_edit_btn.clicked.connect(self.accept_edit)
-        self.table.setIndexWidget(
-            self.model.index(idx_list[0].row(), DisTableModel.DIS_CANCEL_BTN_IDX),
-            cancel_edit_btn)
-        self.table.setIndexWidget(
-            self.model.index(idx_list[0].row(), DisTableModel.DIS_ACCEPT_BTN_IDX),
-            accept_edit_btn)
-        self.table.viewport().update()
-
-    def cancel_edit(self) -> None:
-        edit_row = self.model.row_under_edit
-        if edit_row != -1:
-            self.model.cancel_edit()
-            self.disable_edit_gui(edit_row)
-
-    def accept_edit(self) -> None:
-        edit_row = self.model.row_under_edit
-        if edit_row != -1:
-            self.model.accept_edit()
-            self.model_changed_sig.emit(None, self.model.transactionsList)  # main window catches this, rebuilds stash, and updates views
-            self.disable_edit_gui(edit_row)
-
-    def disable_edit_gui(self, edit_row: int) -> None:
-        ''' just removes the buttons and updates the view '''
-        self.table.setIndexWidget(
-            self.model.index(edit_row, DisTableModel.DIS_CANCEL_BTN_IDX), None)
-        self.table.setIndexWidget(
-            self.model.index(edit_row, DisTableModel.DIS_ACCEPT_BTN_IDX), None)
-        self.table.viewport().update()
-
-    def add_disposition(self) -> None:
-        new_dis = Disposition(datetime.timestamp(datetime.now(timezone.utc)), self.model.asset, 0, 0, 0, "", "New Disposition")
-        self.model.transactionsList.append(new_dis) # TODO: fix fugliness
-        self.model_changed_sig.emit(None, self.model.transactionsList )
-
-    def delete_disposition(self) -> None:
-        sel_model = self.table.selectionModel()
-        idx_list =  sel_model.selectedRows()
-        if not idx_list:
-            button = QMessageBox.warning(self,"Delete Disposition","No Disposition row selected" )
-            return
-        else:
-            dlg = QMessageBox(self)
-            dlg.setWindowTitle("Confirm Delete ")
-            dlg.setText("Delete the selected Disposition?")
-            dlg.setStandardButtons(QMessageBox.Cancel | QMessageBox.Yes )
-            dlg.setIcon(QMessageBox.Question)
-            button = dlg.exec()
-            if button == QMessageBox.Yes:
-                del_row = idx_list[0].row()
-                del self.model.transactionsList[del_row]
-                self.model_changed_sig.emit(None, self.model.transactionsList )
-
-    def toggle_disposition(self):
-        sel_model = self.table.selectionModel()
-        idx_list =  sel_model.selectedRows()
-        if not idx_list:
-            QMessageBox.warning(self,"Toggle Disabled","No Disposition row selected" )
-            return
-        del_row = idx_list[0].row()
-        self.model.toggle_disabled(del_row)
-        self.model_changed_sig.emit(None, self.model.transactionsList)
+    def new_transaction(self) -> Transaction:
+        """Create new Disp instance"""
+        return Disposition(datetime.timestamp(datetime.now(timezone.utc)), self.model.asset, 0, 0, 0, "", "New Disposition")
 
 
 class TransactionStatesPage(QWidget):
@@ -323,8 +236,8 @@ class TransactionStatesPage(QWidget):
 
         self.setLayout(pageLayout)
 
-    def reset_data(self, stash: Stash) -> None:
-        self.model.reset_model(stash.asset, stash.states)
+    def reset_data(self, asset: str, data: List[Transaction]) -> None:
+        self.model.reset_model(asset,data)
         self.table.resizeColumnsToContents()
         self.table.resizeRowsToContents()
         self.table.viewport().update()
@@ -363,18 +276,24 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(tabs)
 
         self.acqPage = AcquisitionsPage(self.stash.asset, self.stash.acquisitions)
-        self.acqPage.model_changed_sig[object, object].connect(self.on_model_changed)
+        self.acqPage.model_changed_sig[object].connect(self.on_acq_model_changed)
         tabs.addTab(self.acqPage, "Acquisitions")
 
         self.dispPage = DispositionsPage(self.stash.asset, self.stash.dispositions)
-        self.dispPage.model_changed_sig[object, object].connect(self.on_model_changed)
+        self.dispPage.model_changed_sig[object].connect(self.on_disp_model_changed)
         tabs.addTab(self.dispPage, "Dispositions")
 
         self.txPage = TransactionStatesPage(self.stash.states)
         tabs.addTab(self.txPage, "Transactions")
 
+    @Slot(object, object)
+    def on_acq_model_changed(self, new_acqs: List[Acquisition]) -> None:
+        self.on_model_changed(new_acqs, None)
 
     @Slot(object, object)
+    def on_disp_model_changed(self, new_disps:List[Disposition]) -> None:
+        self.on_model_changed(None, new_disps)
+
     def on_model_changed(self, new_acqs: List[Acquisition], new_disps:List[Disposition]) -> None:
 
         if new_acqs != None:
@@ -383,9 +302,9 @@ class MainWindow(QMainWindow):
             self.stash.dispositions = new_disps
 
         self.stash.update()  # sorts transactions and builds states
-        self.acqPage.reset_data(self.stash)
-        self.dispPage.reset_data(self.stash)
-        self.txPage.reset_data(self.stash)
+        self.acqPage.reset_data(self.stash.asset, self.stash.acquisitions)
+        self.dispPage.reset_data(self.stash.asset, self.stash.dispositions)
+        self.txPage.reset_data(self.stash.asset, self.stash.states)
         self.centralWidget().update()
 
     def new_stash(self):

@@ -8,8 +8,9 @@
       "asset_amount": 8.0,
       "asset_price": 100.68,
       "fees": 0,
+      "reference": "Coinbase tx: 0xabcdef",
       "comment": "",
-      "reference": "Coinbase tx: 0xabcdef"
+      "disabled": false
     },
     {
       "timestamp": 1600200000,
@@ -17,9 +18,9 @@
       "asset_amount": 5.0,
       "asset_price": 105,
       "fees": 0,
-      "comment": "",
       "reference": "Coinbase tx: 0xdeadbeef",
-      "disabled": true
+      "comment": "",
+      "disabled": false
     }
   ],
   "dispositions": [
@@ -30,7 +31,8 @@
       "asset_price": 200,
       "fees": 0.0,
       "comment": "",
-      "reference": "CB Pro Order Id: 50"
+      "reference": "CB Pro Order Id: 50",
+      "disabled": false
     },
     {
       "timestamp": 1600300000,
@@ -39,7 +41,8 @@
       "asset_price": 120,
       "fees": 0.0,
       "comment": "",
-      "reference": "CB Pro Order Id: 100"
+      "reference": "CB Pro Order Id: 100",
+      "disabled": false
     }
   ]
 }
