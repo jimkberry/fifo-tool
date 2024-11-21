@@ -23,4 +23,5 @@ def test_transaction_init():
     assert t.asset_amount == ASSET_AMOUNT_A
     assert t.fees == FEES_A
     assert t.comment == COMMENT_A
+    assert t.value == ASSET_AMOUNT_A * ASSET_PRICE_A
 
