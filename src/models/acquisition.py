@@ -84,13 +84,14 @@ class AcqTableModel(TxTableModel):
     ACQ_ASSET_AMOUNT_IDX = 1
     ACQ_ASSET_PRICE_IDX = 2
     ACQ_VALUE_IDX = 3
-    ACQ_REF_IDX = 4
-    ACQ_COMMENT_IDX = 5
-    ACQ_CANCEL_BTN_IDX = 6
-    ACQ_ACCEPT_BTN_IDX = 7
-    ACQ_COLUMN_COUNT = 8
+    ACQ_FEES_IDX = 4
+    ACQ_REF_IDX = 5
+    ACQ_COMMENT_IDX = 6
+    ACQ_CANCEL_BTN_IDX = 7
+    ACQ_ACCEPT_BTN_IDX = 8
+    ACQ_COLUMN_COUNT = 9
 
-    HEADER_LABELS = ["Date", "Amount", "Price", "Value", "Reference", "Comment", "", ""]
+    HEADER_LABELS = ["Date", "Amount", "Price", "Value", "Fees", "Reference", "Comment", "", ""]
 
     def __init__(self, asset: str, acquisitions: List[Acquisition] = []) -> None:
          super(AcqTableModel, self).__init__(asset, acquisitions)
@@ -100,7 +101,7 @@ class AcqTableModel(TxTableModel):
 
     def editable_columns(self) -> List[int]:
         return [AcqTableModel.ACQ_TIMESTAMP_IDX, AcqTableModel.ACQ_ASSET_AMOUNT_IDX, AcqTableModel.ACQ_ASSET_PRICE_IDX,
-                AcqTableModel.ACQ_REF_IDX, AcqTableModel.ACQ_COMMENT_IDX]
+                AcqTableModel.ACQ_FEES_IDX, AcqTableModel.ACQ_REF_IDX, AcqTableModel.ACQ_COMMENT_IDX]
 
     def button_columns(self) -> List[int]:
         """return a list of column indices that are buttons (cancel/accept)
@@ -122,6 +123,8 @@ class AcqTableModel(TxTableModel):
             if col == AcqTableModel.ACQ_ASSET_PRICE_IDX:
                 acq.asset_price = self.money_str_to_float(str_val)
             # col == AcqTableModel.ACQ_VALUE_IDX - "value" is a computed property
+            if col == AcqTableModel.ACQ_FEES_IDX:
+                acq.fees = self.money_str_to_float(str_val)
             if col == AcqTableModel.ACQ_REF_IDX:
                 acq.reference = str_val
             if col == AcqTableModel.ACQ_COMMENT_IDX:
@@ -140,6 +143,8 @@ class AcqTableModel(TxTableModel):
             return f"${acq.asset_price:.2f}"
         if col == AcqTableModel.ACQ_VALUE_IDX:
             return f"${acq.value:.2f}"
+        if col == AcqTableModel.ACQ_FEES_IDX:
+            return f"${acq.fees:.2f}"
         if col == AcqTableModel.ACQ_REF_IDX:
             return acq.reference
         if col == AcqTableModel.ACQ_COMMENT_IDX:
