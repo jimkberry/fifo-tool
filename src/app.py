@@ -6,7 +6,7 @@ from typing import List, Dict
 from PySide6.QtWidgets import ( QApplication, QMainWindow, QPushButton,QLineEdit,
     QWidget, QDialog, QDialogButtonBox, QVBoxLayout, QHBoxLayout, QTableView,
     QMessageBox, QTabWidget, QLabel, QFileDialog, QAbstractItemView, QStyle,
-    QAbstractItemDelegate, QStyledItemDelegate)
+    QAbstractItemDelegate, QStyledItemDelegate, QComboBox)
 from PySide6.QtGui import QAction, QPainter, QColor, Qt
 from PySide6.QtCore import QRect, Signal, Slot
 
@@ -14,6 +14,7 @@ from models.transaction import Transaction, TxTableModel
 from models.acquisition import Acquisition, AcqTableModel
 from models.disposition import Disposition, DisTableModel
 from models.stash import Stash, StatesTableModel, StashState
+from models.form8949 import Form8949TableModel
 
 class BorderHighlightItemDelegate(QStyledItemDelegate):
     def __init__(self) -> None:
@@ -243,6 +244,46 @@ class TransactionStatesPage(QWidget):
         self.table.viewport().update()
 
 
+class Form8949Page(QWidget):
+    def __init__(self, states: List[StashState]) -> None:
+        super().__init__()
+
+        self.states = states
+        self.years_combo = QComboBox()
+        self.years_combo.setEditable(True)
+        self.years_combo.lineEdit().setPlaceholderText("Enter year(s) separated by commas")
+        self.years_combo.currentTextChanged.connect(self.on_years_changed)
+
+        self.table = QTableView()
+        self.model = Form8949TableModel(states)
+        self.table.setModel(self.model)
+        self.table.resizeColumnsToContents()
+        self.table.resizeRowsToContents()
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+          # layout
+        layout = QVBoxLayout()
+        layout.addWidget(self.years_combo)
+        layout.addWidget(self.table)
+        self.setLayout(layout)
+
+    def on_years_changed(self):
+        years_text = self.years_combo.currentText()
+        if years_text:
+            years = [int(year.strip()) for year in years_text.split(",") if year.strip().isdigit()]
+        else:
+            years = []
+        self.model.set_year_filter(years)
+        self.table.resizeColumnsToContents()
+        self.table.resizeRowsToContents()
+        self.table.viewport().update()
+
+    def reset_data(self, data: List[Transaction]) -> None:
+        self.model.reset_model(data)
+        self.table.resizeColumnsToContents()
+        self.table.resizeRowsToContents()
+        self.table.viewport().update()
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -284,7 +325,10 @@ class MainWindow(QMainWindow):
         tabs.addTab(self.dispPage, "Dispositions")
 
         self.txPage = TransactionStatesPage(self.stash.states)
-        tabs.addTab(self.txPage, "Transactions")
+        tabs.addTab(self.txPage, "TX States")
+
+        self.form8949Page = Form8949Page(self.stash.states)
+        tabs.addTab(self.form8949Page, "Form 8949")
 
     @Slot(object, object)
     def on_acq_model_changed(self, new_acqs: List[Acquisition]) -> None:
@@ -305,6 +349,7 @@ class MainWindow(QMainWindow):
         self.acqPage.reset_data(self.stash.asset, self.stash.acquisitions)
         self.dispPage.reset_data(self.stash.asset, self.stash.dispositions)
         self.txPage.reset_data(self.stash.asset, self.stash.states)
+        self.form8949Page.reset_data(self.stash.states)
         self.centralWidget().update()
 
     def new_stash(self):
