@@ -158,17 +158,24 @@ class StashState:
     def lots_affected(self) -> List[LotState]:
         return [l for l in self.lots if l.update_amount_delta != 0]
 
-    @property
-    def cap_gains(self) -> float:
-        return sum(l.cap_gains for l in self.lots_affected)
 
     @property
-    def long_short_term(self) -> str:
-        """ returns L is all lots are long-term, S if none are, and L/S if there's a mix  """
-        return (
-            "L" if all(l.is_long_term for l in self.lots_affected)
-            else "S" if not any(l.is_long_term for l in self.lots_affected)
-            else "L/S")
+    def cap_gains(self) -> Dict[str, float]:
+        """ returns a Dict potentially containing:
+            {"L": sum_of_long_term_cap_gains (only if there are any),
+            "S": sum_of_short_term_cap_gains (only if there are any)}
+            or None if there are no cap gains at all
+        """
+        long_term_gains = [l.cap_gains for l in self.lots_affected if l.is_long_term]
+        short_term_gains = [l.cap_gains for l in self.lots_affected if not l.is_long_term]
+        gains_dict: Dict[str, float] = {}
+        if long_term_gains:
+            gains_dict["L"] = sum(long_term_gains)
+        if short_term_gains:
+            gains_dict["S"] = sum(short_term_gains)
+        return gains_dict if gains_dict else None
+
+    # TODO: property? method? Make up your (my) mind on these
 
     def current_lot(self) -> LotState:
         return next((l for l in self.lots if l.balance > 0), None)
@@ -320,8 +327,13 @@ class StatesTableModel(QAbstractTableModel):
             strs = [f"{l.lot_num}: {l.update_amount_delta:+.8f}" for l in state.lots_affected]
             return "\n".join(strs)
         if col == StatesTableModel.CAP_GAINS_IDX:
-            return f"{state.long_short_term}: ${state.cap_gains:.2f}" if isinstance(state.activity, Disposition) else ""
-            #return ", ".join(strs)
+            if isinstance(state.activity, Disposition):
+                gains = state.cap_gains
+                if gains:
+                    strs = [f"{cg[0]}: ${cg[1]:.2f}" for cg in gains.items()]
+                    return "\n".join(strs)
+            return ""
+
         if col == StatesTableModel.REFERENCE_IDX:
             return state.reference
         if col == StatesTableModel.COMMENT_IDX:
