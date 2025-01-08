@@ -26,7 +26,17 @@ class Form8949Entry:
 class Form8949TableModel(QAbstractTableModel):
     """Model for a table containing entries for IRS Form 8949"""
 
-    HEADER_LABELS = ["Description", "Date Acquired", "Date Sold", "Proceeds", "Cost Basis", "Adjustment", "Code", "Gain or Loss"]
+    HEADER_LABELS = ["Description", "Date Sold", "Date Acquired", "Proceeds", "Cost Basis", "Adjustment", "Code", "Gain or Loss"]
+
+    # Define named constants for column indices
+    DESCRIPTION_COLUMN = 0
+    DATE_SOLD_COLUMN = 1
+    DATE_ACQUIRED_COLUMN = 2
+    PROCEEDS_COLUMN = 3
+    COST_BASIS_COLUMN = 4
+    ADJUSTMENT_COLUMN = 5
+    CODE_COLUMN = 6
+    GAIN_OR_LOSS_COLUMN = 7
 
     def __init__(self, states: List[StashState]) -> None:
         super(Form8949TableModel, self).__init__()
@@ -83,21 +93,21 @@ class Form8949TableModel(QAbstractTableModel):
         if role == Qt.DisplayRole:
             entry = self.entries_list[index.row()]
             if entry.year_sold in self._display_years or not self._display_years:
-                if index.column() == 0:
+                if index.column() == self.DESCRIPTION_COLUMN:
                     return entry.description
-                if index.column() == 1:
-                    return datetime.fromtimestamp(entry.date_acquired, tz=timezone.utc).strftime("%Y-%m-%d")
-                if index.column() == 2:
+                if index.column() == self.DATE_SOLD_COLUMN:
                     return datetime.fromtimestamp(entry.date_sold, tz=timezone.utc).strftime("%Y-%m-%d")
-                if index.column() == 3:
+                if index.column() == self.DATE_ACQUIRED_COLUMN:
+                    return datetime.fromtimestamp(entry.date_acquired, tz=timezone.utc).strftime("%Y-%m-%d")
+                if index.column() == self.PROCEEDS_COLUMN:
                     return f"${entry.proceeds:.2f}"
-                if index.column() == 4:
+                if index.column() == self.COST_BASIS_COLUMN:
                     return f"${entry.cost_basis:.2f}"
-                if index.column() == 5:
+                if index.column() == self.ADJUSTMENT_COLUMN:
                     return f"${entry.adjustment:.2f}"
-                if index.column() == 6:
+                if index.column() == self.CODE_COLUMN:
                     return entry.code
-                if index.column() == 7:
+                if index.column() == self.GAIN_OR_LOSS_COLUMN:
                     return f"${entry.gain_or_loss:.2f}"
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = ...):
