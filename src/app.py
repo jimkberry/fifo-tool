@@ -272,7 +272,7 @@ class Form8949Page(QWidget):
             years = [int(year.strip()) for year in years_text.split(",") if year.strip().isdigit()]
         else:
             years = []
-        self.model.set_year_filter(years)
+        self.model.filter_model_by_year(years)
         self.table.resizeColumnsToContents()
         self.table.resizeRowsToContents()
         self.table.viewport().update()
