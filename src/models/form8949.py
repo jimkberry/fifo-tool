@@ -42,7 +42,7 @@ class Form8949TableModel(QAbstractTableModel):
         super(Form8949TableModel, self).__init__()
         self.all_entries: List[Form8949Entry] = []
         self.all_years: List[int] = []
-        self.years_to_display: List[int] = []
+        self.displayed_years: List[int] = []
         self.display_entries: List[Form8949Entry] = []
         self.reset_model(states)
 
@@ -70,7 +70,7 @@ class Form8949TableModel(QAbstractTableModel):
         return all_years
 
     def _filter_entries_by_year(self, entries: List[Form8949Entry],  years: List[int]) -> None:
-        self.years_to_display = years
+        self.displayed_years = years
         return entries if not years else [e for e in entries if e.year_sold in years]
 
     def reset_model(self, states: List[StashState]) -> None:

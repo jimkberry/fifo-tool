@@ -6,7 +6,7 @@ from typing import List, Dict
 from PySide6.QtWidgets import ( QApplication, QMainWindow, QPushButton,QLineEdit,
     QWidget, QDialog, QDialogButtonBox, QVBoxLayout, QHBoxLayout, QTableView,
     QMessageBox, QTabWidget, QLabel, QFileDialog, QAbstractItemView, QStyle,
-    QAbstractItemDelegate, QStyledItemDelegate, QComboBox)
+    QAbstractItemDelegate, QStyledItemDelegate, QComboBox, QListWidget)
 from PySide6.QtGui import QAction, QPainter, QColor, Qt
 from PySide6.QtCore import QRect, Signal, Slot
 
@@ -243,42 +243,76 @@ class TransactionStatesPage(QWidget):
         self.table.resizeRowsToContents()
         self.table.viewport().update()
 
+class YearSelectionDialog(QDialog):
+    def __init__(self, all_years: List[int], parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Select years")
+
+        self.list_widget = QListWidget()
+        for year in all_years:
+            self.list_widget.addItem(str(year))
+        self.list_widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
+
+        self.button_b
+        ox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+        # Connect the double-click event to the custom slot
+        self.list_widget.itemDoubleClicked.connect(self.on_item_double_clicked)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.list_widget)
+        layout.addWidget(self.button_box)
+        self.setLayout(layout)
+
+    def on_item_double_clicked(self, item):
+        if item is not None:
+            self.accept()
 
 class Form8949Page(QWidget):
     def __init__(self, states: List[StashState]) -> None:
         super().__init__()
 
-        self.states = states
-        self.years_combo = QComboBox()
-        self.years_combo.setEditable(True)
-        self.years_combo.lineEdit().setPlaceholderText("Enter year(s) separated by commas")
-        self.years_combo.currentTextChanged.connect(self.on_years_changed)
-
+#        self.states = states
         self.table = QTableView()
         self.model = Form8949TableModel(states)
         self.table.setModel(self.model)
         self.table.resizeColumnsToContents()
         self.table.resizeRowsToContents()
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+
+        btnLabel = QLabel("Years:")
+        self.years_button = QPushButton("")
+        self.years_button.clicked.connect(self.on_years_changed)
+
           # layout
+        btnLayout = QHBoxLayout()
+        btnLayout.addWidget(btnLabel)
+        btnLayout.addWidget(self.years_button)
+        btnLayout.addStretch()
+
         layout = QVBoxLayout()
-        layout.addWidget(self.years_combo)
+        layout.addLayout(btnLayout)
         layout.addWidget(self.table)
         self.setLayout(layout)
 
     def on_years_changed(self):
-        years_text = self.years_combo.currentText()
-        if years_text:
-            years = [int(year.strip()) for year in years_text.split(",") if year.strip().isdigit()]
-        else:
-            years = []
-        self.model.filter_model_by_year(years)
-        self.table.resizeColumnsToContents()
-        self.table.resizeRowsToContents()
-        self.table.viewport().update()
+        self.year_selection_dialog = YearSelectionDialog(self.model.all_years)
+        if self.year_selection_dialog.exec() == QDialog.Accepted:
+            years = [int(year.text()) for year in self.year_selection_dialog.list_widget.selectedItems()]
+            self.model.filter_model_by_year(years)
+            self._update_years_button()
+            self.table.resizeColumnsToContents()
+            self.table.resizeRowsToContents()
+            self.table.viewport().update()
+
+    def _update_years_button(self) -> None:
+        years = self.model.displayed_years if self.model.displayed_years else self.model.all_years
+        self.years_button.setText(f" { ', '.join(map(str, years)) if years else ' None Available ' } ")
 
     def reset_data(self, data: List[Transaction]) -> None:
         self.model.reset_model(data)
+        self._update_years_button()
         self.table.resizeColumnsToContents()
         self.table.resizeRowsToContents()
         self.table.viewport().update()
@@ -288,7 +322,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        #self.stash = self.load_stash('new_stash.json')
+        #self.stash = self.load_stash('new_stash.json'
         self.stash = Stash('BTC','Default Stash')
 
         self.resize(1024, 768)
