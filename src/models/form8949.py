@@ -8,16 +8,17 @@ from models.disposition import Disposition
 
 class Form8949Entry:
     """Represents a single entry in IRS Form 8949"""
-    def __init__(self, description: str, date_acquired: float, date_sold: float, proceeds: float, cost_basis: float, adjustment: float, code: str):
+    def __init__(self, description: str, date_acquired: float, date_sold: float, proceeds: float, cost_basis: float, adjustment: float, code: str, is_log_term: bool):
         self.description = description
         self.date_acquired = date_acquired
-        self.date_sold = date_sold # timestamp
+        self.date_sold = date_sold  # timestamp
         self.proceeds = proceeds
         self.cost_basis = cost_basis
         self.adjustment = adjustment
         self.code = code
         # not on for 8949
         self.year_sold = datetime.fromtimestamp(date_sold, tz=timezone.utc).year
+        self.is_log_term = is_log_term  # Add this line
 
     @property
     def gain_or_loss(self) -> float:
@@ -26,7 +27,7 @@ class Form8949Entry:
 class Form8949TableModel(QAbstractTableModel):
     """Model for a table containing entries for IRS Form 8949"""
 
-    HEADER_LABELS = ["Description", "Date Sold", "Date Acquired", "Proceeds", "Cost Basis", "Adjustment", "Code", "Gain or Loss"]
+    HEADER_LABELS = ["Description", "Date Sold", "Date Acquired", "Proceeds", "Cost Basis", "Adjustment", "Code", "Term", "Gain or Loss"]
 
     # Define named constants for column indices
     DESCRIPTION_COLUMN = 0
@@ -36,7 +37,8 @@ class Form8949TableModel(QAbstractTableModel):
     COST_BASIS_COLUMN = 4
     ADJUSTMENT_COLUMN = 5
     CODE_COLUMN = 6
-    GAIN_OR_LOSS_COLUMN = 7
+    TERM_COLUMN = 7  # New TERM_COLUMN
+    GAIN_OR_LOSS_COLUMN = 8
 
     def __init__(self, states: List[StashState]) -> None:
         super(Form8949TableModel, self).__init__()
@@ -58,7 +60,8 @@ class Form8949TableModel(QAbstractTableModel):
                         proceeds=lot.sale_proceeds,
                         cost_basis=lot.basis_price,
                         adjustment=0.0,  # Assuming no adjustments for simplicity
-                        code=""  # Assuming no code for simplicity
+                        code="",  # Assuming no code for simplicityy
+                        is_log_term=lot.is_long_term  # Add this line to pass the is_long_term parameter
                     )
                     entries.append(entry)
         return entries
@@ -109,6 +112,8 @@ class Form8949TableModel(QAbstractTableModel):
                 return f"${entry.adjustment:.2f}"
             if index.column() == self.CODE_COLUMN:
                 return entry.code
+            if index.column() == self.TERM_COLUMN:
+                return "L" if entry.is_log_term else "S"  # Display "L" if is_long_term is True, else "S"
             if index.column() == self.GAIN_OR_LOSS_COLUMN:
                 return f"${entry.gain_or_loss:.2f}"
 
