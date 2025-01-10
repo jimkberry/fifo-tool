@@ -50,16 +50,17 @@ class Form8949TableModel(QAbstractTableModel):
         entries = []
         for state in states:
             if isinstance(state.activity, Disposition):
-                entry = Form8949Entry(
-                    description=state.activity.asset,
-                    date_acquired=state.current_lot().initial_timestamp,
-                    date_sold=state.timestamp,
-                    proceeds=state.value,
-                    cost_basis=state.current_lot().basis_price * state.activity.asset_amount,
-                    adjustment=0.0,  # Assuming no adjustments for simplicity
-                    code=""  # Assuming no code for simplicity
-                )
-                entries.append(entry)
+                for lot in state.lots_affected:
+                    entry = Form8949Entry(
+                        description=f"{-lot.update_amount_delta:.8f} {state.activity.asset}",
+                        date_acquired=lot.initial_timestamp,
+                        date_sold=state.timestamp,
+                        proceeds=lot.sale_proceeds,
+                        cost_basis=lot.basis_price,
+                        adjustment=0.0,  # Assuming no adjustments for simplicity
+                        code=""  # Assuming no code for simplicity
+                    )
+                    entries.append(entry)
         return entries
 
     def _find_all_years(self, entries: List[Form8949Entry]) -> None:
