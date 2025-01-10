@@ -28,6 +28,14 @@ class LotState:
 
     # computed stuff
     @property
+    def sale_basis(self) -> float:
+        return self.basis_price * -self.update_amount_delta # delta is < 0 for a disp
+
+    @property
+    def sale_proceeds(self) -> float:
+        return self.update_asset_price * -self.update_amount_delta
+
+    @property
     def cap_gains(self) -> float:
         return -(self.update_asset_price - self.basis_price) * self.update_amount_delta # delta is < 0 for a disp
 
