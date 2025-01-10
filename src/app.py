@@ -253,8 +253,7 @@ class YearSelectionDialog(QDialog):
             self.list_widget.addItem(str(year))
         self.list_widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
 
-        self.button_b
-        ox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
         # Connect the double-click event to the custom slot
