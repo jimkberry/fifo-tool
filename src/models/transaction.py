@@ -5,8 +5,6 @@ from typing import List, Dict
 
 from PySide6.QtCore import Qt, QAbstractTableModel
 
- # TODO: Change acq.initial_amount to just 'amount'. An acquisition is NOT a lot.
-
 class Transaction():
     """Acquiring or disposing of some of a commodity
 
@@ -26,23 +24,94 @@ class Transaction():
     # DATETIME_FORMAT = "%m/%d/%Y %H:%M:%S %z" # "12/27/2016 14:14:00 +0000"
 
     def __init__(self, timestamp: float, asset: str, asset_amount: float, asset_price: float,
-                  fees: float, reference: str, comment: str, disabled: bool = False) -> None:
-        self.timestamp = timestamp # floating-point posix epoch
-        self.asset: str = asset
+                fees: float, reference: str, comment: str, disabled: bool = False) -> None:
+        self.timestamp = timestamp  # floating-point posix epoch
+        self.asset = asset
         self.asset_price = asset_price
         self.asset_amount = asset_amount
         self.fees = fees
         self.reference = reference
         self.comment = comment
-        self.disabled = disabled
-        self.update_hash() # hash
+        self.disabled = disabled # public attribute
+        self.update_hash()  # hash
+
+    @property
+    def timestamp(self) -> float:
+        return self._timestamp
+
+    @timestamp.setter
+    def timestamp(self, value: float) -> None:
+        if value <= 0:
+            raise ValueError("Invalid timestamp")
+        self._timestamp = value
+
+    @property
+    def asset(self) -> str:
+        return self._asset
+
+    @asset.setter
+    def asset(self, value: str) -> None:
+        if not isinstance(value, str) or not value:
+            raise ValueError("Invalid asset name")
+        self._asset = value
+
+    @property
+    def asset_price(self) -> float:
+        return self._asset_price
+
+    @asset_price.setter
+    def asset_price(self, value: float) -> None:
+        if value <= 0:
+            raise ValueError("Negative asset price")
+        self._asset_price = value
+
+    @property
+    def asset_amount(self) -> float:
+        return self._asset_amount
+
+    @asset_amount.setter
+    def asset_amount(self, value: float) -> None:
+        if value <= 0:
+            raise ValueError("Negative asset amount")
+        self._asset_amount = value
+
+    @property
+    def fees(self) -> float:
+        return self._fees
+
+    @fees.setter
+    def fees(self, value: float) -> None:
+#        if value < 0:  TODO: put back in
+#            raise ValueError("Negative fees")
+        self._fees = value
+
+    @property
+    def reference(self) -> str:
+        return self._reference
+
+    @reference.setter
+    def reference(self, value: str) -> None:
+        if not isinstance(value, str):
+            raise ValueError("Reference must be a string")
+        self._reference = value
+
+    @property
+    def comment(self) -> str:
+        return self._comment
+
+    @comment.setter
+    def comment(self, value: str) -> None:
+        if not isinstance(value, str):
+            raise ValueError("Comment must be a string")
+        self._comment = value
+
 
     @property
     def value(self) -> float:
         return self.asset_amount * self.asset_price
 
     def update_hash(self) -> None:
-        self.hash = hash((self.timestamp, self.asset, self.asset_amount, self.asset_price, self.fees)) # try make dups harder to have
+        self._hash = hash((self.timestamp, self.asset, self.asset_amount, self.asset_price, self.fees))  # try make dups harder to have
 
 # QT View models
 class TxTableModel(QAbstractTableModel):
@@ -52,7 +121,7 @@ class TxTableModel(QAbstractTableModel):
 
     def __init__(self, asset: str, transactions: List[Transaction] = []) -> None:
         super(TxTableModel, self).__init__()
-        assert asset != None
+        assert asset is not None
         self.asset = asset
         self.transactionsList = transactions
         self.edit_buff = None
@@ -69,7 +138,7 @@ class TxTableModel(QAbstractTableModel):
         raise NotImplementedError("Subclasses must implement this method")
 
     def editable_columns(self) -> List[int]:
-        """return a list of indices for  columns that are editable"""
+        """return a list of indices for columns that are editable"""
         raise NotImplementedError("Subclasses must implement this method")
 
     def button_columns(self) -> List[int]:
@@ -83,7 +152,7 @@ class TxTableModel(QAbstractTableModel):
         return float(str_val.replace('$', ''))
 
     def reset_model(self, asset: str, transactions: List[Transaction]) -> None:
-        assert asset != None
+        assert asset is not None
         self.asset = asset
         self.beginResetModel()
         self.transactionsList = transactions if transactions else []
@@ -141,8 +210,8 @@ class TxTableModel(QAbstractTableModel):
         if role == Qt.EditRole and index.row() == self.row_under_edit:
             return self.set_data(self.edit_buff, index.column(), str(value))
 
-    def rowCount(self, index):
+    def rowCount(self, index=None):
         return len(self.transactionsList)
 
-    def columnCount(self, index):
+    def columnCount(self, index=None):
         return len(self.header_labels())

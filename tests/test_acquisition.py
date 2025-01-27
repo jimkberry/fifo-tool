@@ -66,4 +66,8 @@ def test_acquisition_from_json_dict():
     b = Acquisition.from_json_dict(ACQ_JSON_B)
     assert b.disabled == True
 
+def test_acquisition_negative_asset_amount():
+    with pytest.raises(ValueError, match="Negative asset amount"):
+        Acquisition(TIMESTAMP_A, ASSET_A, -1.0, ASSET_PRICE_A, FEES_A, REFERENCE_A, COMMENT_A)
+
 
