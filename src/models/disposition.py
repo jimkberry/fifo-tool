@@ -141,7 +141,7 @@ class DisTableModel(TxTableModel):
         if col == DisTableModel.DIS_PRICE_IDX:
             return f"${dis.asset_price:.2f}"
         if col == DisTableModel.DIS_VALUE_IDX:
-            return f"${dis.value:.2f}"
+            return f"${dis.asset_value:.2f}"
         if col == DisTableModel.DIS_FEES_IDX:
             return f"${dis.fees:.2f}"
         if col == DisTableModel.DIS_REFERENCE_IDX:

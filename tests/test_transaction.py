@@ -21,7 +21,7 @@ def test_transaction_init():
     assert t.asset_amount == ASSET_AMOUNT_A
     assert t.fees == FEES_A
     assert t.comment == COMMENT_A
-    assert t.value == ASSET_AMOUNT_A * ASSET_PRICE_A
+    assert t.asset_value == ASSET_AMOUNT_A * ASSET_PRICE_A
 
 def test_transaction_init_invalid_asset_amount():
     with pytest.raises(ValueError):
@@ -49,5 +49,5 @@ def test_transaction_init_invalid_comment():
 
 def test_transaction_value():
     t = Transaction(TIMESTAMP_A, ASSET_A, ASSET_AMOUNT_A, ASSET_PRICE_A, FEES_A, REFERENCE_A, COMMENT_A)
-    assert t.value == ASSET_AMOUNT_A * ASSET_PRICE_A
+    assert t.asset_value == ASSET_AMOUNT_A * ASSET_PRICE_A
 

@@ -142,7 +142,7 @@ class StashState:
 
     @property
     def value(self) -> float:
-        return self.activity.value
+        return self.activity.asset_value
 
     @property
     def fees(self) -> float:

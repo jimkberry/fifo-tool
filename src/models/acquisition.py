@@ -142,7 +142,7 @@ class AcqTableModel(TxTableModel):
         if col == AcqTableModel.ACQ_ASSET_PRICE_IDX:
             return f"${acq.asset_price:.2f}"
         if col == AcqTableModel.ACQ_VALUE_IDX:
-            return f"${acq.value:.2f}"
+            return f"${acq.asset_value:.2f}"
         if col == AcqTableModel.ACQ_FEES_IDX:
             return f"${acq.fees:.2f}"
         if col == AcqTableModel.ACQ_REF_IDX:

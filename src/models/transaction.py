@@ -81,8 +81,8 @@ class Transaction():
 
     @fees.setter
     def fees(self, value: float) -> None:
-#        if value < 0:  TODO: put back in
-#            raise ValueError("Negative fees")
+        if value < 0:
+            raise ValueError("Negative fees")
         self._fees = value
 
     @property
@@ -105,9 +105,8 @@ class Transaction():
             raise ValueError("Comment must be a string")
         self._comment = value
 
-
     @property
-    def value(self) -> float:
+    def asset_value(self) -> float:
         return self.asset_amount * self.asset_price
 
     def update_hash(self) -> None:
