@@ -8,7 +8,7 @@ from PySide6.QtWidgets import ( QApplication, QMainWindow, QPushButton,QLineEdit
     QMessageBox, QTabWidget, QLabel, QFileDialog, QAbstractItemView, QStyle,
     QAbstractItemDelegate, QStyledItemDelegate, QComboBox, QListWidget)
 from PySide6.QtGui import QAction, QPainter, QColor, Qt
-from PySide6.QtCore import QRect, Signal, Slot
+from PySide6.QtCore import QRect, Signal, Slot, QPoint
 
 from models.transaction import Transaction, TxTableModel
 from models.acquisition import Acquisition, AcqTableModel
@@ -131,10 +131,13 @@ class TxPage(QWidget):
     def accept_edit(self) -> None:
         edit_row = self.model.row_under_edit
         if edit_row != -1:
+            topIdx = self.table.indexAt(QPoint())
             self.model.accept_edit()
             # TODO: figure this one out
             self.model_changed_sig.emit(self.model.transactionsList)  # main window catches this, rebuilds stash, and updates views
             self.disable_edit_gui(edit_row)
+            self.table.scrollTo(topIdx, QAbstractItemView.PositionAtTop)
+
 
     def disable_edit_gui(self, edit_row: int) -> None:
         ''' just removes the buttons and updates the view '''
