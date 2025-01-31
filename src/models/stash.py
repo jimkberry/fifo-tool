@@ -16,28 +16,29 @@ class LotState:
 
     def __init__(self, lot_num: int):
         # constant across activities
-        self.lot_num = lot_num
+        self.lot_num: int = lot_num
         self.initial_timestamp: float = 0
         self.initial_balance: float = 0
         self.basis_price: float = 0
         # "update" means last activity that modified the lot
         self.update_timestamp: float = 0
-        self.update_amount_delta = 0
-        self.update_asset_price = 0
+        self.update_amount_delta: float = 0
+        self.update_asset_price: float = 0
+        self.update_fees: float = 0
         self.balance: float = 0
 
     # computed stuff
     @property
-    def sale_basis(self) -> float:
-        return self.basis_price * -self.update_amount_delta # delta is < 0 for a disp
+    def sale_basis(self) -> float: # IRS 8949 basis total. Not basis price. Should include acqusition fees? Nah.
+        return self.basis_price * (-self.update_amount_delta) # delta is < 0 for a disp
 
     @property
-    def sale_proceeds(self) -> float:
-        return self.update_asset_price * -self.update_amount_delta
+    def sale_proceeds(self) -> float: #net sale proceeds
+        return self.update_asset_price * (-self.update_amount_delta) - self.update_fees
 
     @property
     def cap_gains(self) -> float:
-        return -(self.update_asset_price - self.basis_price) * self.update_amount_delta # delta is < 0 for a disp
+        return self.sale_proceeds - self.sale_basis
 
     @property
     def is_long_term(self) -> bool:
@@ -60,7 +61,7 @@ class LotState:
         #leave all update* attributes zero
         return dst
 
-    def acquire(self, timestamp: float, initital_balance: float, basis_price: float):
+    def acquire(self, timestamp: float, initital_balance: float, basis_price: float, fees: float):
         # constant for all state of this lot
         self.initial_timestamp: float = timestamp
         self.initial_balance: float = initital_balance
@@ -69,11 +70,12 @@ class LotState:
         self.update_timestamp: float = timestamp
         self.update_amount_delta = initital_balance
         self.update_asset_price = basis_price
+        self.update_fees = fees
         # current state value
         self.balance: float = initital_balance
 
 
-    def dispose(self, timestamp: float, amount: float, price: float) -> float:
+    def dispose(self, timestamp: float, amount: float, price: float, fees: float ) -> float:
         ''' subtract amount from lot balance and update vars
 
             returns overdraw amount > 0 if amount > lot balance
@@ -82,6 +84,7 @@ class LotState:
         assert amount >= 0, f"LotState.dispose() - Amount must be positive, got {amount}"
         self.update_timestamp = timestamp
         self.update_asset_price = price
+        self.update_fees = fees
 
         overdraw: float = amount - self.balance
         if overdraw > 0:
@@ -100,7 +103,8 @@ class LotState:
             "basis_price": self.basis_price,
             "update_timestamp": self.update_timestamp,
             "update_amount_delta": self.update_amount_delta,
-            "upadate_asset_price": self.update_asset_price,
+            "update_asset_price": self.update_asset_price,
+            "update_fees": self.update_fees,
             "balance": self.balance
         }
 
@@ -205,13 +209,13 @@ class StashState:
 
         if isinstance(activity, Acquisition):
             new_lot = LotState(len(self.lots))  # this is where lots get their sequence numbers
-            new_lot.acquire(activity.timestamp, activity.asset_amount, activity.asset_price)
+            new_lot.acquire(activity.timestamp, activity.asset_amount, activity.asset_price, activity.fees)
             new_state.lots.append(new_lot)
 
         elif isinstance(activity, Disposition):
             amount_left = activity.asset_amount
             while new_state.current_lot() and amount_left > 0:
-                amount_left = new_state.current_lot().dispose(activity.timestamp, amount_left, activity.asset_price)
+                amount_left = new_state.current_lot().dispose(activity.timestamp, amount_left, activity.asset_price, activity.fees)
             # should be an assert?
             if amount_left != 0:
                 print(f"Error! Activity #{activity_idx} Disposition {activity.timestamp} overdrawn {amount_left}")
