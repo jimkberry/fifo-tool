@@ -10,7 +10,7 @@ def test_lot_state_init():
 
     s = LotState(1)
 
-    assert s.lot_num == 1
+    assert s.lot_number == 1
     assert s.initial_timestamp == 0
     assert s.initial_balance == 0
     assert s.basis_price == 0

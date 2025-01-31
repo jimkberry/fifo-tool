@@ -31,10 +31,19 @@ class Acquisition(Transaction):
                  disabled: bool = False) -> None:
         super().__init__( timestamp, asset, asset_amount, asset_price, fees, reference, comment, disabled)
         assert asset != None
+        self.lot_number = 0  # 0 means unassigned
 
-    def duplicate(self) -> "Acquisition":
-        return Acquisition(self.timestamp, self.asset, self.asset_amount, self.asset_price,
-                   self.fees, self.reference, self.comment, self.disabled)
+    @property
+    def lot_number(self) -> int:
+        return self._lot_number
+
+    @lot_number.setter
+    def lot_number(self, value: int) -> None:
+        self._lot_number = value
+
+    # def duplicate(self) -> "Acquisition":
+    #     return Acquisition(self.timestamp, self.asset, self.asset_amount, self.asset_price,
+    #                self.fees, self.reference, self.comment, self.disabled)
 
     @classmethod
     def from_json_dict(cls, jd: Dict) -> "Acquisition":
@@ -80,18 +89,19 @@ class Acquisition(Transaction):
 
 class AcqTableModel(TxTableModel):
 
-    ACQ_TIMESTAMP_IDX = 0
-    ACQ_ASSET_AMOUNT_IDX = 1
-    ACQ_ASSET_PRICE_IDX = 2
-    ACQ_VALUE_IDX = 3
-    ACQ_FEES_IDX = 4
-    ACQ_REF_IDX = 5
-    ACQ_COMMENT_IDX = 6
-    ACQ_CANCEL_BTN_IDX = 7
-    ACQ_ACCEPT_BTN_IDX = 8
-    ACQ_COLUMN_COUNT = 9
+    ACQ_LOT_NUMBER_IDX = 0
+    ACQ_TIMESTAMP_IDX = 1
+    ACQ_ASSET_AMOUNT_IDX = 2
+    ACQ_ASSET_PRICE_IDX = 3
+    ACQ_VALUE_IDX = 4
+    ACQ_FEES_IDX = 5
+    ACQ_REF_IDX = 6
+    ACQ_COMMENT_IDX = 7
+    ACQ_CANCEL_BTN_IDX = 8
+    ACQ_ACCEPT_BTN_IDX = 9
+    ACQ_COLUMN_COUNT = 10
 
-    HEADER_LABELS = ["Date", "Amount", "Price", "Value", "Fees", "Reference", "Comment", "", ""]
+    HEADER_LABELS = ["Lot #", "Date", "Amount", "Price", "Value", "Fees", "Reference", "Comment", "", ""]
 
     def __init__(self, asset: str, acquisitions: List[Acquisition] = []) -> None:
          super(AcqTableModel, self).__init__(asset, acquisitions)
@@ -135,6 +145,8 @@ class AcqTableModel(TxTableModel):
             return False
 
     def fetch_data(self, acq: Acquisition, col: int) -> object:
+        if col == AcqTableModel.ACQ_LOT_NUMBER_IDX:
+            return acq.lot_number or ""
         if col == AcqTableModel.ACQ_TIMESTAMP_IDX:
             return datetime.fromtimestamp(acq.timestamp,tz=timezone.utc).strftime(Acquisition.DATETIME_FORMAT)
         if col == AcqTableModel.ACQ_ASSET_AMOUNT_IDX:

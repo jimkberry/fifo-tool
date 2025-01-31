@@ -16,7 +16,7 @@ class LotState:
 
     def __init__(self, lot_num: int):
         # constant across activities
-        self.lot_num: int = lot_num
+        self.lot_number: int = lot_num
         self.initial_timestamp: float = 0
         self.initial_balance: float = 0
         self.basis_price: float = 0
@@ -50,7 +50,7 @@ class LotState:
 
             returns copy.
         """
-        dst = cls(src.lot_num)
+        dst = cls(src.lot_number)
         # constants
         dst.initial_timestamp = src.initial_timestamp
         dst.initial_balance = src.initial_balance
@@ -208,7 +208,7 @@ class StashState:
         new_state.activity = activity
 
         if isinstance(activity, Acquisition):
-            new_lot = LotState(len(self.lots))  # this is where lots get their sequence numbers
+            new_lot = LotState(activity.lot_number)
             new_lot.acquire(activity.timestamp, activity.asset_amount, activity.asset_price, activity.fees)
             new_state.lots.append(new_lot)
 
@@ -242,7 +242,18 @@ class Stash:
         """
         self.acquisitions = sorted( self.acquisitions,  key=lambda a: a.timestamp)
         self.dispositions = sorted( self.dispositions,  key=lambda d: d.timestamp)
+        self.number_lots()
         self.generate_states()
+
+    def number_lots(self):
+        """Assign lot numbers to acquisitions"""
+        runnning_idx: int = 1
+        for acq in self.acquisitions:
+            if not acq.disabled:
+                acq.lot_number = runnning_idx
+                runnning_idx += 1
+            else:
+                acq.lot_number = 0
 
     def generate_states(self):
         activities: List[Any] =  [act for act in (self.acquisitions + self.dispositions) if not act.disabled]
@@ -296,18 +307,19 @@ class StatesTableModel(QAbstractTableModel):
 
     TIMESTAMP_IDX = 0 # tx/acq
     TX_TYPE_IDX = 1 # tx/acq
-    ASSET_AMOUNT_IDX = 2 # tx/acq
-    ASSET_PRICE_IDX = 3 # tx/acq
-    VALUE_IDX = 4 # tx/acq
-    FEES_IDX = 5 # tx/acq
-    BALANCE_IDX = 6 # state
-    LOTS_AFFECTED_IDX = 7 # state
-    CAP_GAINS_IDX = 8 # state
-    REFERENCE_IDX = 9 # disp
-    COMMENT_IDX = 10 # tx/acq
-    COLUMN_COUNT = 11
+    TX_LOT_NUMBER_IDX = 2 # tx/acq
+    ASSET_AMOUNT_IDX = 3 # tx/acq
+    ASSET_PRICE_IDX = 4 # tx/acq
+    VALUE_IDX = 5 # tx/acq
+    FEES_IDX = 6 # tx/acq
+    BALANCE_IDX = 7 # state
+    LOTS_AFFECTED_IDX = 8 # state
+    CAP_GAINS_IDX = 9 # state
+    REFERENCE_IDX = 10 # disp
+    COMMENT_IDX = 11 # tx/acq
+    COLUMN_COUNT = 12
 
-    HEADER_LABELS = ["Date", "Type", "Amount", "Price", "Value", "Fees", "Balance", "Lots Affected", "Cap Gains", "Reference", "Comment"]
+    HEADER_LABELS = ["Date", "Type", "Lot", "Amount", "Price", "Value", "Fees", "Balance", "Lots Affected", "Cap Gains", "Reference", "Comment"]
 
     def __init__(self, stashStates: List[StashState] = []) -> None:
         super(StatesTableModel, self).__init__()
@@ -325,6 +337,8 @@ class StatesTableModel(QAbstractTableModel):
             return datetime.fromtimestamp(state.timestamp,tz=timezone.utc).strftime(Acquisition.DATETIME_FORMAT)
         if col == StatesTableModel.TX_TYPE_IDX:
             return str(state.activity)
+        if col == StatesTableModel.TX_LOT_NUMBER_IDX:
+            return state.activity.lot_number if isinstance(state.activity, Acquisition) else ""
         if col == StatesTableModel.ASSET_AMOUNT_IDX:
             return f"{state.asset_amount:.8f}"
         if col == StatesTableModel.ASSET_PRICE_IDX:
@@ -336,7 +350,7 @@ class StatesTableModel(QAbstractTableModel):
         if col == StatesTableModel.BALANCE_IDX:
             return f"{state.balance:.8f}"
         if col == StatesTableModel.LOTS_AFFECTED_IDX:
-            strs = [f"{l.lot_num}: {l.update_amount_delta:+.8f}" for l in state.lots_affected]
+            strs = [f"{l.lot_number}: {l.update_amount_delta:+.8f}" for l in state.lots_affected]
             return "\n".join(strs)
         if col == StatesTableModel.CAP_GAINS_IDX:
             if isinstance(state.activity, Disposition):
