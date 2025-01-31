@@ -427,7 +427,7 @@ class MainWindow(QMainWindow):
         if stash:
             self.stash = stash
             self.setWindowTitle(f'{self.stash.asset}: {self.stash.title}')
-            self.on_model_changed(None, None)
+            self.on_model_changed(None, None) # TODO: this call already happens in self.load_stash()
 
     def load_stash(self, filename: str) -> Stash:
         stash = {}
