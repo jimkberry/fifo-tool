@@ -27,10 +27,11 @@ class BorderHighlightItemDelegate(QStyledItemDelegate):
             rect.adjust(0,0,-1,-1)
             painter.fillRect(rect,QColor(0, 0, 0, 128))
         if index.row() == index.model().row_under_edit:
-            painter.setPen(QColor(255, 255, 128, 128))
-            rect = QRect(option.rect)
-            rect.adjust(0,0,-1,-1)
-            painter.drawRect(rect)
+            if  index.column() in index.model().editable_columns():
+                painter.setPen(QColor(255, 255, 128, 128))
+                rect = QRect(option.rect)
+                rect.adjust(0,0,-1,-1)
+                painter.drawRect(rect)
 
 class TxPage(QWidget):
 
