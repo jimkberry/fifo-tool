@@ -8,17 +8,17 @@ from models.disposition import Disposition
 
 class Form8949Entry:
     """Represents a single entry in IRS Form 8949"""
-    def __init__(self, description: str, date_acquired: float, date_sold: float, proceeds: float, cost_basis: float, adjustment: float, code: str, is_log_term: bool):
-        self.description = description
-        self.date_acquired = date_acquired
-        self.date_sold = date_sold  # timestamp
-        self.proceeds = proceeds
-        self.cost_basis = cost_basis
-        self.adjustment = adjustment
-        self.code = code
+    def __init__(self, description: str, date_acquired: float, date_sold: float, proceeds: float, cost_basis: float, adjustment: float, code: str, is_long_term: bool):
+        self.description:str = description
+        self.date_acquired: float = date_acquired
+        self.date_sold: float = date_sold  # timestamp
+        self.proceeds: float = proceeds
+        self.cost_basis: float = cost_basis
+        self.adjustment: float = adjustment
+        self.code: str = code
         # not on for 8949
-        self.year_sold = datetime.fromtimestamp(date_sold, tz=timezone.utc).year
-        self.is_log_term = is_log_term  # Add this line
+        self.year_sold: int = datetime.fromtimestamp(date_sold, tz=timezone.utc).year
+        self.is_long_term: bool = is_long_term  # Add this line
 
     @property
     def gain_or_loss(self) -> float:
@@ -27,7 +27,7 @@ class Form8949Entry:
 class Form8949TableModel(QAbstractTableModel):
     """Model for a table containing entries for IRS Form 8949"""
 
-    HEADER_LABELS = ["Description", "Date Sold", "Date Acquired", "Proceeds", "Cost Basis", "Adjustment", "Code", "Term", "Gain or Loss"]
+    HEADER_LABELS = ["Description", "Date Sold", "Date Acquired", "Net Proceeds", "Cost Basis", "Adjustment", "Code", "Term", "Gain or Loss"]
 
     # Define named constants for column indices
     DESCRIPTION_COLUMN = 0
@@ -48,6 +48,7 @@ class Form8949TableModel(QAbstractTableModel):
         self.display_entries: List[Form8949Entry] = []
         self.reset_model(states)
 
+
     def _generate_entries(self, states: List[StashState]) -> List[Form8949Entry]:
         entries = []
         for state in states:
@@ -58,10 +59,10 @@ class Form8949TableModel(QAbstractTableModel):
                         date_acquired=lot.initial_timestamp,
                         date_sold=state.timestamp,
                         proceeds=lot.sale_proceeds,
-                        cost_basis=lot.basis_price,
+                        cost_basis=lot.sale_basis,
                         adjustment=0.0,  # Assuming no adjustments for simplicity
                         code="",  # Assuming no code for simplicityy
-                        is_log_term=lot.is_long_term  # Add this line to pass the is_long_term parameter
+                        is_long_term=lot.is_long_term  # Add this line to pass the is_long_term parameter
                     )
                     entries.append(entry)
         return entries
@@ -113,10 +114,39 @@ class Form8949TableModel(QAbstractTableModel):
             if index.column() == self.CODE_COLUMN:
                 return entry.code
             if index.column() == self.TERM_COLUMN:
-                return "L" if entry.is_log_term else "S"  # Display "L" if is_long_term is True, else "S"
+                return "L" if entry.is_long_term else "S"  # Display "L" if is_long_term is True, else "S"
             if index.column() == self.GAIN_OR_LOSS_COLUMN:
                 return f"${entry.gain_or_loss:.2f}"
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = ...):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return self.HEADER_LABELS[section]
+
+    def displayed_adjustments_sum(self, is_long_term: bool) -> float:
+        """Sum of adjustments for long-term or short-term transactions"""
+        return sum(
+            tx.adjustment for tx in self.display_entries
+            if tx.is_long_term == is_long_term
+        )
+
+    def displayed_proceeds_sum(self, is_long_term: bool) -> float:
+        """Sum of proceeds for long term or short-term transactions"""
+        return sum(
+            tx.proceeds for tx in self.display_entries
+            if tx.is_long_term == is_long_term
+        )
+
+
+    def displayed_cost_basis_sum(self, is_long_term: bool) -> float:
+        """Sum of cost basis for long-term or short-term transactions"""
+        return sum(
+            tx.cost_basis for tx in self.display_entries
+            if tx.is_long_term == is_long_term
+        )
+
+    def displayed_gain_sum(self, is_long_term: bool) -> float:
+        """Sum of total gains for long-term or short-term transactions"""
+        return sum(
+            tx.gain_or_loss for tx in self.display_entries
+            if tx.is_long_term == is_long_term
+        )

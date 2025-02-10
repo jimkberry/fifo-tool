@@ -41,9 +41,14 @@ class Acquisition(Transaction):
     def lot_number(self, value: int) -> None:
         self._lot_number = value
 
-    # def duplicate(self) -> "Acquisition":
-    #     return Acquisition(self.timestamp, self.asset, self.asset_amount, self.asset_price,
-    #                self.fees, self.reference, self.comment, self.disabled)
+    @property
+    def unit_cost_basis(self) -> float:
+        """IRS 8949 definition, not a 'cost' that was acutally paid. Takes fees into account"""
+        return self.asset_price + self.fees / self.asset_amount
+
+    def duplicate(self) -> "Acquisition":
+        return Acquisition(self.timestamp, self.asset, self.asset_amount, self.asset_price,
+                   self.fees, self.reference, self.comment, self.disabled)
 
     @classmethod
     def from_json_dict(cls, jd: Dict) -> "Acquisition":

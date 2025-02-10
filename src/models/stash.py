@@ -1,7 +1,7 @@
 import sys
 import json
 from datetime import datetime, timezone
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 
 from PySide6.QtCore import Qt, QAbstractTableModel
 
@@ -14,23 +14,47 @@ class LotState:
 
     ONE_YEAR_SECS = 24 * 60 * 60 * 365.0
 
-    def __init__(self, lot_num: int):
+    def __init__(self, base_acq: Acquisition):
         # constant across activities
-        self.lot_number: int = lot_num
-        self.initial_timestamp: float = 0
-        self.initial_balance: float = 0
-        self.basis_price: float = 0
+        self.acquisition: Acquisition = base_acq
+
         # "update" means last activity that modified the lot
         self.update_timestamp: float = 0
         self.update_amount_delta: float = 0
         self.update_asset_price: float = 0
         self.update_fees: float = 0
+
         self.balance: float = 0
+
+    # from the base acquisition
+    @property
+    def lot_number(self) -> int:
+        return self.acquisition.lot_number
+
+    @property
+    def initial_timestamp(self) -> float:
+        return self.acquisition.timestamp
+
+    @property
+    def initial_balance(self) -> float:
+        return self.acquisition.asset_amount
+
+    @property
+    def initial_price(self) -> float:
+        return self.acquisition.asset_price
+
+    @property
+    def initial_fees(self) -> float:
+        return self.acquisition.fees
+
+    @property
+    def unit_cost_basis(self) -> float:
+        return self.acquisition.unit_cost_basis
 
     # computed stuff
     @property
     def sale_basis(self) -> float: # IRS 8949 basis total. Not basis price. Should include acqusition fees? Nah.
-        return self.basis_price * (-self.update_amount_delta) # delta is < 0 for a disp
+        return self.initial_price * (-self.update_amount_delta) # delta is < 0 for a disp
 
     @property
     def sale_proceeds(self) -> float: #net sale proceeds
@@ -50,29 +74,20 @@ class LotState:
 
             returns copy.
         """
-        dst = cls(src.lot_number)
-        # constants
-        dst.initial_timestamp = src.initial_timestamp
-        dst.initial_balance = src.initial_balance
-        dst.basis_price = src.basis_price
+        dst = cls(src.acquisition)
         # carry this forward
         dst.balance = src.balance
-
         #leave all update* attributes zero
         return dst
 
-    def acquire(self, timestamp: float, initital_balance: float, basis_price: float, fees: float):
-        # constant for all state of this lot
-        self.initial_timestamp: float = timestamp
-        self.initial_balance: float = initital_balance
-        self.basis_price: float = basis_price
-        # values from the most recent update
-        self.update_timestamp: float = timestamp
-        self.update_amount_delta = initital_balance
-        self.update_asset_price = basis_price
-        self.update_fees = fees
+    def acquire(self):
+        # Set all update values to initial acquisition values
+        self.update_timestamp: float = self.initial_timestamp
+        self.update_amount_delta = self.initial_balance
+        self.update_asset_price = self.initial_price
+        self.update_fees = self.initial_fees
         # current state value
-        self.balance: float = initital_balance
+        self.balance: float = self.initial_balance
 
 
     def dispose(self, timestamp: float, amount: float, price: float, fees: float ) -> float:
@@ -100,7 +115,7 @@ class LotState:
         return {
             "initial_timestamp": self.initial_timestamp,
             "initial_balance": self.initial_balance,
-            "basis_price": self.basis_price,
+            "basis_price": self.initial_price,
             "update_timestamp": self.update_timestamp,
             "update_amount_delta": self.update_amount_delta,
             "update_asset_price": self.update_asset_price,
@@ -187,6 +202,15 @@ class StashState:
             gains_dict["S"] = sum(short_term_gains)
         return gains_dict if gains_dict else None
 
+    @property
+    def cap_gains_2(self) -> List[Tuple[bool, int, float]]:
+        """ returns a list of cap gain trades tuples.
+
+            Each trade is a 3 element tuple: (is_long_term, lot_id, cap_gains)
+            or None if there are no cap gains at all
+        """
+        return [(l.is_long_term, l.lot_number, l.cap_gains) for l in self.lots_affected if l.cap_gains != 0]
+
     # TODO: property? method? Make up your (my) mind on these
 
     def current_lot(self) -> LotState:
@@ -208,8 +232,8 @@ class StashState:
         new_state.activity = activity
 
         if isinstance(activity, Acquisition):
-            new_lot = LotState(activity.lot_number)
-            new_lot.acquire(activity.timestamp, activity.asset_amount, activity.asset_price, activity.fees)
+            new_lot = LotState(activity)
+            new_lot.acquire()
             new_state.lots.append(new_lot)
 
         elif isinstance(activity, Disposition):
@@ -354,11 +378,20 @@ class StatesTableModel(QAbstractTableModel):
             return "\n".join(strs)
         if col == StatesTableModel.CAP_GAINS_IDX:
             if isinstance(state.activity, Disposition):
-                gains = state.cap_gains
-                if gains:
-                    strs = [f"{cg[0]}: ${cg[1]:.2f}" for cg in gains.items()]
+                all_gains = state.cap_gains_2
+                if all_gains:
+                    strs = [f"{cg[1]}: ${cg[2]:.2f} {'L' if cg[0] else 'S'}" for cg in all_gains]
                     return "\n".join(strs)
             return ""
+
+
+        # if col == StatesTableModel.CAP_GAINS_IDX:
+        #     if isinstance(state.activity, Disposition):
+        #         gains = state.cap_gains
+        #         if gains:
+        #             strs = [f"{cg[0]}: ${cg[1]:.2f}" for cg in gains.items()]
+        #             return "\n".join(strs)
+        #     return ""
 
         if col == StatesTableModel.REFERENCE_IDX:
             return state.reference

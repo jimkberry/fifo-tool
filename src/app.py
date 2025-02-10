@@ -6,7 +6,7 @@ from typing import List, Dict
 from PySide6.QtWidgets import ( QApplication, QMainWindow, QPushButton,QLineEdit,
     QWidget, QDialog, QDialogButtonBox, QVBoxLayout, QHBoxLayout, QTableView,
     QMessageBox, QTabWidget, QLabel, QFileDialog, QAbstractItemView, QStyle,
-    QAbstractItemDelegate, QStyledItemDelegate, QComboBox, QListWidget)
+    QAbstractItemDelegate, QStyledItemDelegate, QListWidget, QGridLayout, QFrame)
 from PySide6.QtGui import QAction, QPainter, QColor, Qt
 from PySide6.QtCore import QRect, Signal, Slot, QPoint
 
@@ -288,16 +288,73 @@ class Form8949Page(QWidget):
         self.years_button = QPushButton("")
         self.years_button.clicked.connect(self.on_years_changed)
 
-          # layout
+          # btnLayout contains `years` button and label
         btnLayout = QHBoxLayout()
         btnLayout.addWidget(btnLabel)
         btnLayout.addWidget(self.years_button)
         btnLayout.addStretch()
 
+        # sums layout contains 2 rows: `Long Term Totals` and `Short Term Totals`
+        # each row contains a label and text field for `Cost Basis`, `Proceeds`, `Adjustments``, `Gain`
+        self.short_term_proceeds = QLineEdit()
+        self.short_term_cost = QLineEdit()
+        self.short_term_adjustments = QLineEdit()
+        self.short_term_gain = QLineEdit()
+        self.long_term_proceeds = QLineEdit()
+        self.long_term_cost = QLineEdit()
+        self.long_term_adjustments = QLineEdit()
+        self.long_term_gain = QLineEdit()
+
+        sumsLayout = QGridLayout()
+
+        # row 0 - labels
+        sumsLayout.addWidget(QLabel("Totals:"), 0, 0)
+        sumsLayout.addWidget(QLabel("Proceeds"), 0, 1)
+        sumsLayout.addWidget(QLabel("Cost Basis"), 0, 2)
+        sumsLayout.addWidget(QLabel("Adjustments"), 0, 3)
+        sumsLayout.addWidget(QLabel("Gain"), 0, 4)
+        #sumsLayout.addWidget(QLabel(" "), 0, 5)
+        #sumsLayout.setColumnStretch(5, 1)
+
+        # row 1 - short term totals
+        sumsLayout.addWidget(QLabel("Short-term:"), 1, 0)
+        sumsLayout.addWidget(self.short_term_proceeds, 1, 1)
+        sumsLayout.addWidget(self.short_term_cost, 1, 2)
+        sumsLayout.addWidget(self.short_term_adjustments, 1, 3)
+        sumsLayout.addWidget(self.short_term_gain, 1, 4)
+
+        # long term totals
+        sumsLayout.addWidget(QLabel("Long-term:"), 2, 0)
+        sumsLayout.addWidget(self.long_term_proceeds, 2, 1)
+        sumsLayout.addWidget(self.long_term_cost, 2, 2)
+        sumsLayout.addWidget(self.long_term_adjustments, 2, 3)
+        sumsLayout.addWidget(self.long_term_gain, 2, 4)
+
+        sumsFrame = QFrame() # put a frame around the sums
+        sumsFrame.setLayout(sumsLayout)
+        sumsFrame.setFrameShape(QFrame.StyledPanel)
+        sumsFrame.setFrameShadow(QFrame.Raised)
+
+        bottomLayout = QHBoxLayout()
+        bottomLayout.addStretch()
+        bottomLayout.addWidget(sumsFrame)
+        bottomLayout.addStretch()
+
         layout = QVBoxLayout()
         layout.addLayout(btnLayout)
         layout.addWidget(self.table)
+        layout.addLayout(bottomLayout)
         self.setLayout(layout)
+
+    def _populate_totals(self) -> None:
+        self.short_term_proceeds.setText(f"{self.model.displayed_proceeds_sum(False):,.2f}")
+        self.short_term_cost.setText(f"{self.model.displayed_cost_basis_sum(False):,.2f}")
+        self.short_term_adjustments.setText(f"{self.model.displayed_adjustments_sum(False):,.2f}")
+        self.short_term_gain.setText(f"{self.model.displayed_gain_sum(False):,.2f}")
+        self.long_term_proceeds.setText(f"{self.model.displayed_proceeds_sum(True):,.2f}")
+        self.long_term_cost.setText(f"{self.model.displayed_cost_basis_sum(True):,.2f}")
+        self.long_term_adjustments.setText(f"{self.model.displayed_adjustments_sum(True):,.2f}")
+        self.long_term_gain.setText(f"{self.model.displayed_gain_sum(True):,.2f}")
 
     def on_years_changed(self):
         self.year_selection_dialog = YearSelectionDialog(self.model.all_years)
@@ -305,6 +362,7 @@ class Form8949Page(QWidget):
             years = [int(year.text()) for year in self.year_selection_dialog.list_widget.selectedItems()]
             self.model.filter_model_by_year(years)
             self._update_years_button()
+            self._populate_totals()
             self.table.resizeColumnsToContents()
             self.table.resizeRowsToContents()
             self.table.viewport().update()
@@ -316,6 +374,7 @@ class Form8949Page(QWidget):
     def reset_data(self, data: List[Transaction]) -> None:
         self.model.reset_model(data)
         self._update_years_button()
+        self._populate_totals()
         self.table.resizeColumnsToContents()
         self.table.resizeRowsToContents()
         self.table.viewport().update()
