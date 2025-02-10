@@ -41,7 +41,7 @@ class Transaction():
 
     @timestamp.setter
     def timestamp(self, value: float) -> None:
-        if value <= 0:
+        if value < 0:
             raise ValueError("Invalid timestamp")
         self._timestamp = value
 
@@ -61,7 +61,7 @@ class Transaction():
 
     @asset_price.setter
     def asset_price(self, value: float) -> None:
-        if value <= 0:
+        if value < 0:
             raise ValueError("Negative asset price")
         self._asset_price = value
 
@@ -71,7 +71,7 @@ class Transaction():
 
     @asset_amount.setter
     def asset_amount(self, value: float) -> None:
-        if value <= 0:
+        if value < 0:
             raise ValueError("Negative asset amount")
         self._asset_amount = value
 
