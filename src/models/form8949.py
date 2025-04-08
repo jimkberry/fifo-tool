@@ -6,6 +6,8 @@ from PySide6.QtCore import Qt, QAbstractTableModel
 from models.stash import StashState
 from models.disposition import Disposition
 
+IRS_FORM_DATE_FORMAT = "%m/%d/%Y" # "12/27/2016"
+
 class Form8949Entry:
     """Represents a single entry in IRS Form 8949"""
     def __init__(self, description: str, date_acquired: float, date_sold: float, proceeds: float, cost_basis: float, adjustment: float, code: str, is_long_term: bool):
@@ -102,9 +104,9 @@ class Form8949TableModel(QAbstractTableModel):
             if index.column() == self.DESCRIPTION_COLUMN:
                 return entry.description
             if index.column() == self.DATE_SOLD_COLUMN:
-                return datetime.fromtimestamp(entry.date_sold, tz=timezone.utc).strftime("%Y-%m-%d")
+                return datetime.fromtimestamp(entry.date_sold, tz=timezone.utc).strftime(IRS_FORM_DATE_FORMAT)
             if index.column() == self.DATE_ACQUIRED_COLUMN:
-                return datetime.fromtimestamp(entry.date_acquired, tz=timezone.utc).strftime("%Y-%m-%d")
+                return datetime.fromtimestamp(entry.date_acquired, tz=timezone.utc).strftime(IRS_FORM_DATE_FORMAT)
             if index.column() == self.PROCEEDS_COLUMN:
                 return f"${entry.proceeds:.2f}"
             if index.column() == self.COST_BASIS_COLUMN:
