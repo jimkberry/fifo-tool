@@ -29,18 +29,18 @@ class Form8949Entry:
 class Form8949TableModel(QAbstractTableModel):
     """Model for a table containing entries for IRS Form 8949"""
 
-    HEADER_LABELS = ["Description", "Date Sold", "Date Acquired", "Net Proceeds", "Cost Basis", "Adjustment", "Code", "Term", "Gain or Loss"]
+    HEADER_LABELS = ["Description", "Date Acquired", "Date Sold", "Net Proceeds", "Cost Basis", "Adj Code", "Adj Amount", "Gain or Loss", "Term"]
 
     # Define named constants for column indices
     DESCRIPTION_COLUMN = 0
-    DATE_SOLD_COLUMN = 1
-    DATE_ACQUIRED_COLUMN = 2
+    DATE_ACQUIRED_COLUMN = 1
+    DATE_SOLD_COLUMN = 2
     PROCEEDS_COLUMN = 3
     COST_BASIS_COLUMN = 4
-    ADJUSTMENT_COLUMN = 5
-    CODE_COLUMN = 6
-    TERM_COLUMN = 7  # New TERM_COLUMN
-    GAIN_OR_LOSS_COLUMN = 8
+    CODE_COLUMN = 5
+    ADJUSTMENT_COLUMN = 6
+    GAIN_OR_LOSS_COLUMN = 7
+    TERM_COLUMN = 8  # New TERM_COLUMN
 
     def __init__(self, states: List[StashState]) -> None:
         super(Form8949TableModel, self).__init__()
